@@ -22,8 +22,9 @@ test_output() {
 }
 
 wait_for_tmux() {
+  local is_tmux_ready
   for ((i=0; i < 10; i++)); do
-    local tmux_output is_tmux_ready
+    local tmux_output
     tmux_output="$(tmux info 2>&1 || :)"
     case "$tmux_output" in
       *"no server"*)
@@ -34,10 +35,10 @@ wait_for_tmux() {
         break
       ;;
     esac
-    if [ ! "${is_tmux_ready:-}" ]; then
-      die "TMUX server initialization timed out"
-    fi
   done
+  if [ ! "${is_tmux_ready:-}" ]; then
+    die "TMUX server initialization timed out"
+  fi
 }
 
 # Sets up an HTTP server so that files can be downloaded from it.
