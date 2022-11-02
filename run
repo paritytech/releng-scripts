@@ -3,8 +3,7 @@
 set -Eeu -o pipefail
 shopt -s inherit_errexit
 
-this_file="${BASH_SOURCE[0]}"
-project_root="${this_file%/*}"
+project_root="${BASH_SOURCE[0]%/*}"
 tests_dir="$project_root/tests"
 
 # shellcheck source=./lib.sh
