@@ -21,8 +21,8 @@ This repository contains scripts managed and used by
 
 ## Bukt <a name="tools-bukt"></a>
 
-`bukt` is a tool for dealing with cloud storage platforms such as AWS S3. It
-offers the following benefits over using the backends' APIs directly:
+[`bukt`](./bukt) is a tool for dealing with cloud storage platforms such as AWS
+S3. It offers the following benefits over using the backends' APIs directly:
 
 - It provides a common interface for different backend APIs.
 - It automatically sets the right path for a given file based on the
