@@ -28,8 +28,8 @@ S3. It offers the following benefits over using the backends' APIs directly:
 - It automatically sets the right path for a given file based on the
   `OPERATION` so that users don't have to remember path conventions
   manually.
-- Its API more resilient to breaking changes since arguments can be adapted over
-  time according to our needs.
+- Its API is more resilient to breaking changes since arguments can be adapted
+  over time according to our needs.
 
 Try `bukt --help` for guidance on how to use it.
 
