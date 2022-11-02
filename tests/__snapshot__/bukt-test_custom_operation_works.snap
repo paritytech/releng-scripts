@@ -1,0 +1,3 @@
+0
+aws s3 cp -- PLACEHOLDER s3://test/test/PLACEHOLDER
+Upload exit code: 0

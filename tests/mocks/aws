@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+set -Eeu -o pipefail
+shopt -s inherit_errexit
+
+mocks_dir="${BASH_SOURCE[0]%/*}"
+tests_dir="${mocks_dir%/*}"
+project_root="${tests_dir%/*}"
+
+# shellcheck source=../../lib.sh
+. "$project_root/lib.sh"
+# shellcheck source=../vars.bash
+. "$tests_dir/vars.bash"
+
+command="$1"; shift
+subcommand="$1"; shift
+
+case "$command" in
+  s3)
+    case "$subcommand" in
+      cp)
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --) # -- "$source" "$destination"
+              shift
+              shift
+              echo "$1" >> "$AWS_DESTINATION_FILE"
+              break
+            ;;
+            *)
+              die "Unsupported argument: $1"
+            ;;
+          esac
+        done
+      ;;
+      *)
+        die "Unsupported subcommand: $subcommand"
+      ;;
+    esac
+  ;;
+  s3api)
+    case "$subcommand" in
+      head-object)
+        get_opt consume bucket "$@"
+        bucket="$__get_opt_value"
+        set -- "${__get_opt_args[@]}"
+
+        get_opt consume key "$@"
+        key="$__get_opt_value"
+        set -- "${__get_opt_args[@]}"
+
+        input_destination="s3://$bucket/$key"
+        while IFS= read -r destination; do
+          if [ "$destination" == "$input_destination" ]; then
+            found_destination=true
+            break
+          fi
+        done < "$AWS_DESTINATION_FILE"
+
+        get_opt consume output "$@"
+        output="$__get_opt_value"
+        set -- "${__get_opt_args[@]}"
+
+        case "$output" in
+          json)
+            if [ "${found_destination:-}" ]; then
+              echo "{}"
+            else
+              echo "Not Found"
+            fi
+          ;;
+          *)
+            die "Unsupported output: $output"
+          ;;
+        esac
+      ;;
+      *)
+        die "Unsupported subcommand: $subcommand"
+      ;;
+    esac
+  ;;
+  *)
+    die "Invalid command: $command"
+  ;;
+esac

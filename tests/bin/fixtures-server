@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -Eeu -o pipefail
+shopt -s inherit_errexit
+
+pipe="$1"
+fixtures_dir="$2"
+
+# CI's python defaults to python2, which doesn't have http.server
+if [ "${CI:-}" ]; then
+  python=python3
+else
+  python=python
+fi
+
+# Set up PYTHONUNBUFFERED and -u (for redundancy) to force the server's output
+# to flushed to the pipe immediately
+PYTHONUNBUFFERED=1 "$python" -u -m http.server -d "$fixtures_dir" 2>&1 | tee "$pipe"

@@ -1,0 +1,25 @@
+0
+
+=== UPLOAD THE FILE ===
+
+Uploading file: tests/fixtures/foo.txt
+Upload destination: test/foo.txt
+Upload exit code: 0
+
+=== UPLOAD FAILS BECAUSE OVERWRITE IS DISABLED ===
+
+Uploading file: tests/fixtures/foo.txt
+Upload destination: test/foo.txt
+[INFO]: Checking metadata for destination s3://test/test/foo.txt
+{}
+[ERROR] File already exists: s3://test/test/foo.txt
+        Use `bukt upload --overwrite [...]` to overwrite it
+[ERROR] Upload command failed for file: tests/fixtures/foo.txt
+        Exit code: 1
+
+=== UPLOAD WORKS BECAUSE OF --overwrite ===
+
+Uploading file: tests/fixtures/foo.txt
+Upload destination: test/foo.txt
+[INFO]: File will be overwritten in s3://test/test/foo.txt
+Upload exit code: 0
