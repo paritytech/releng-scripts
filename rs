@@ -29,7 +29,7 @@ on_exit() {
   fi
 
   if [ "$exit_code" -ne 0 ] && [ "${FALLBACK_TO_HELP:-}" ]; then
-    log +error "Check out \`${FALLBACK_TO_HELP:-}\` for usage guidance."
+    log +error "Check out \`$FALLBACK_TO_HELP\` for usage guidance."
   fi
 
   exit $exit_code

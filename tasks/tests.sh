@@ -94,6 +94,7 @@ if bats -j "$(nproc)" "$tests_dir"; then
       old_atime="${snapshots_and_atime[$((i+1))]}"
       if [ "$(stat -c %X "$snapshot_file")" == "$old_atime" ]; then
         if [ "${delete_stale_snapshots:-}" ]; then
+          log info "Deleting stale snapshot $snapshot_file"
           rm "$snapshot_file"
         else
           log error "Snapshot was not touched: $snapshot_file"

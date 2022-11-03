@@ -2,7 +2,7 @@
 
 - [Introduction](#introduction)
 - [Tools](#tools)
-  - [Bukt](#tools-bukt)
+  - [RS](#tools-rs)
 - [Usage](#usage)
   - [GitHub Actions](#usage-github-actions)
   - [GitLab Jobs](#usage-gitlab-jobs)
@@ -19,10 +19,11 @@ This repository contains scripts managed and used by
 
 # Tools <a name="tools"></a>
 
-## Bukt <a name="tools-bukt"></a>
+## RS <a name="tools-rs"></a>
 
-[`bukt`](./bukt) is a tool for dealing with cloud storage platforms such as AWS
-S3. It offers the following benefits over using the backends' APIs directly:
+[`rs`](./rs) (stands for **R**emote **S**torage) is a tool for dealing with
+cloud storage platforms such as AWS S3. It offers the following benefits over
+using the backends' APIs directly:
 
 - It provides a common interface for different backend APIs.
 - It automatically sets the right path for a given file based on the
@@ -31,7 +32,7 @@ S3. It offers the following benefits over using the backends' APIs directly:
 - Its API is more resilient to breaking changes since arguments can be adapted
   over time according to our needs.
 
-Try `bukt --help` for guidance on how to use it.
+Try `rs --help` for guidance on how to use it.
 
 See https://github.com/paritytech/release-engineering/pull/113 for the
 initial concept and motivations.
@@ -98,4 +99,4 @@ Then run the S3Mock docker:
 
 Then try to upload a file:
 
-`just bukt upload custom foo/bar s3 --s3mock tests/fixtures/foo.txt`
+`just rs upload custom foo/bar s3 --s3mock tests/fixtures/foo.txt`

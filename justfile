@@ -6,5 +6,5 @@ tests *args:
 linters *args:
   ./tasks/linters.sh "$@"
 
-bukt *args:
-  ./bukt "$@"
+rs *args:
+  ./rs "$@"

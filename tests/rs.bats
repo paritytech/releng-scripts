@@ -46,19 +46,19 @@ teardown() {
 
 @test "help can be printed" {
   touch_snapshot
-  run "$project_root/bukt" --help
+  run "$project_root/rs" --help
   assert_snapshot status
 }
 
 @test "upload help can be printed" {
   touch_snapshot
-  run "$project_root/bukt" upload --help
+  run "$project_root/rs" upload --help
   assert_snapshot status
 }
 
 @test "backend options are properly forwarded" {
   touch_snapshot
-  run "$project_root/bukt" "${uploader_dry_args[@]}" \
+  run "$project_root/rs" "${uploader_dry_args[@]}" \
     s3 - --foo --bar -- \
     PLACEHOLDER
   assert_snapshot
@@ -68,15 +68,15 @@ teardown() {
   touch_snapshot
 
   test_output append "=== UPLOAD THE FILE ==="
-  run "$project_root/bukt" "${uploader_default_args[@]}"
+  run "$project_root/rs" "${uploader_default_args[@]}"
   test_output append "$output"
 
   test_output append "=== UPLOAD FAILS BECAUSE OVERWRITE IS DISABLED ==="
-  run "$project_root/bukt" "${uploader_default_args[@]}"
+  run "$project_root/rs" "${uploader_default_args[@]}"
   test_output append "$output"
 
   test_output append "=== UPLOAD WORKS BECAUSE OF --overwrite ==="
-  run "$project_root/bukt" "${uploader_overwrite_args[@]}"
+  run "$project_root/rs" "${uploader_overwrite_args[@]}"
   test_output append "$output"
 
   test_output collect
@@ -88,7 +88,7 @@ teardown() {
   GITHUB_REPOSITORY_OWNER=polkadot \
   GITHUB_WORKFLOW=foo \
   GITHUB_RUN_ID=123 \
-    run "$project_root/bukt" "${uploader_base_args[@]}" --dry \
+    run "$project_root/rs" "${uploader_base_args[@]}" --dry \
       gha \
       s3 PLACEHOLDER
   assert_snapshot
@@ -96,7 +96,7 @@ teardown() {
 
 @test "release operation works" {
   touch_snapshot
-  run "$project_root/bukt" "${uploader_base_args[@]}" --dry \
+  run "$project_root/rs" "${uploader_base_args[@]}" --dry \
     release polkadot v0.9.30 \
     s3 PLACEHOLDER
   assert_snapshot
@@ -104,7 +104,7 @@ teardown() {
 
 @test "custom operation works" {
   touch_snapshot
-  run "$project_root/bukt" "${uploader_dry_args[@]}" \
+  run "$project_root/rs" "${uploader_dry_args[@]}" \
     s3 PLACEHOLDER
   assert_snapshot
 }
@@ -120,7 +120,7 @@ teardown() {
     "${uploader_default_args[@]:: $(( ${#uploader_default_args[*]} - 1 ))}"
     http://0.0.0.0:8000/foo.txt
   )
-  run "$project_root/bukt" "${upload_args[@]}"
+  run "$project_root/rs" "${upload_args[@]}"
 
   fixtures_server kill
 

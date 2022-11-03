@@ -20,7 +20,7 @@ log() {
       fi
     ;;
     info)
-      echo "[INFO]: $msg"
+      echo "[INFO] $msg"
     ;;
     default)
       echo "$msg"

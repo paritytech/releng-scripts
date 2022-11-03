@@ -10,10 +10,10 @@ Upload exit code: 0
 
 Uploading file: tests/fixtures/foo.txt
 Upload destination: test/foo.txt
-[INFO]: Checking metadata for destination s3://test/test/foo.txt
+[INFO] Checking metadata for destination s3://test/test/foo.txt
 {}
 [ERROR] File already exists: s3://test/test/foo.txt
-        Use `bukt upload --overwrite [...]` to overwrite it
+        Use `rs upload --overwrite [...]` to overwrite it
 [ERROR] Upload command failed for file: tests/fixtures/foo.txt
         Exit code: 1
 
@@ -21,5 +21,5 @@ Upload destination: test/foo.txt
 
 Uploading file: tests/fixtures/foo.txt
 Upload destination: test/foo.txt
-[INFO]: File will be overwritten in s3://test/test/foo.txt
+[INFO] File will be overwritten in s3://test/test/foo.txt
 Upload exit code: 0
