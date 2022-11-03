@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-shell-file
+        name: check-shell-file
+        entry: tasks/check-shell-file.sh
+        language: system
+        files: .*
+      - id: editorconfig
+        name: editorconfig
+        entry: ec
+        language: system
+        files: .*

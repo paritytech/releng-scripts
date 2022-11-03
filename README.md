@@ -25,7 +25,7 @@ This repository contains scripts managed and used by
 
 ## rs <a name="tools-rs"></a>
 
-[`rs`](./rs) (stands for **R**emote **S**torage) is a tool for dealing with
+[`rs`](/rs) (stands for **R**emote **S**torage) is a tool for dealing with
 cloud storage platforms such as AWS S3. It offers the following benefits over
 using the backends' APIs directly:
 

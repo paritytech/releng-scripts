@@ -1,4 +1,4 @@
-on: 
+on:
   pull_request:
     branches:
       - master
@@ -8,17 +8,40 @@ on:
 
 name: CI
 
+env:
+  PRECOMMIT_PYTHON_VERSION: 3.8.12
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install linters
-        run: sudo apt install -y shellcheck
+      - name: Set up pre-commit environment
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Get pip cache dir
+        id: get-pip-cache
+        run: echo "PIP_CACHE_DIR=$(pip cache dir)" >> $GITHUB_ENV
+
+      - name: Use cached pre-commit environment
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pre-commit
+            ${{ env.PIP_CACHE_DIR }}
+          key: pre-commit+${{ env.PRECOMMIT_PYTHON_VERSION }}+${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Install editorconfig-checker
+        run: .github/workflows/install-executable.sh ec https://github.com/editorconfig-checker/editorconfig-checker/releases/download/2.6.0/ec-linux-amd64 23e29f5be389e65b2febf66bba80090e2561ae53b08e3c1e571982790b693179 >> "$GITHUB_PATH"
 
       - name: Run linters
-        run: ./tasks/linters.sh
+        run: ./tasks/linters.sh --show-diff-on-failure
 
   test:
     runs-on: ubuntu-latest
@@ -36,3 +59,14 @@ jobs:
 
       - name: Run tests
         run: ./tasks/tests.sh --check-stale-snapshots
+
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: gaurav-nelson/github-action-markdown-link-check@0a51127e9955b855a9bbfa1ff5577f1d1338c9a5 # v1.0.14
+      with:
+        use-quiet-mode: "yes"
+        config-file: ".github/workflows/markdown-link-check.json"
+        check-modified-files-only: "yes"
