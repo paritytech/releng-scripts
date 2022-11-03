@@ -159,3 +159,14 @@ trim_val() {
 trim() {
   trim_val "$1" $'\n' ' '
 }
+
+print_fallback_to_help() {
+  local exit_code="$1"
+  if [ "${__fallback_to_help_printed:-}" ]; then
+    return
+  fi
+  if [ "$exit_code" -ne 0 ] && [ "${FALLBACK_TO_HELP:-}" ]; then
+    __fallback_to_help_printed=true
+    log +error "Check out \`$FALLBACK_TO_HELP\` for usage guidance."
+  fi
+}
