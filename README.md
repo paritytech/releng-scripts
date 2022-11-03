@@ -2,12 +2,13 @@
 
 - [Introduction](#introduction)
 - [Tools](#tools)
-  - [RS](#tools-rs)
+  - [rs](#tools-rs)
 - [Usage](#usage)
   - [GitHub Actions](#usage-github-actions)
   - [GitLab Jobs](#usage-gitlab-jobs)
   - [Locally](#usage-locally)
 - [Development](#development)
+  - [Repository structure](#development-repository-structure)
   - [Tests](#development-tests)
   - [Linters](#development-linters)
   - [S3](#development-s3)
@@ -19,7 +20,7 @@ This repository contains scripts managed and used by
 
 # Tools <a name="tools"></a>
 
-## RS <a name="tools-rs"></a>
+## rs <a name="tools-rs"></a>
 
 [`rs`](./rs) (stands for **R**emote **S**torage) is a tool for dealing with
 cloud storage platforms such as AWS S3. It offers the following benefits over
@@ -67,6 +68,66 @@ job:
 Clone this repository and run the scripts
 
 # Development <a name="development"></a>
+
+## Repository structure <a name="#development-repository-structure"></a>
+
+### External consumption
+
+If the file is meant for external consumption, such as the tools' entrypoints,
+avoid adding the extension because that's more subject to breaking changes in
+case we want to change the tool's programming language later.
+
+Adding the extension is encouraged for files which are not meant for external
+consumption, i.e. scripts which are run by other scripts or invoked through some
+command runner such as `just`.
+
+Here's an example:
+
+```
+/repository
+├── cmd
+│  └── rs
+│     └── upload.sh
+└── rs
+```
+
+`rs` is a tool entrypoint meant for external consumption, therefore it doesn't
+include an extension. On the other hand, `upload.sh`, which corresponds to the
+`upload` subcommand of `rs`, can keep its extension because it's not meant for
+external consumption, as it's invoked by `rs`.
+
+### Tools
+
+Tools are organized with the following hierarchy:
+
+- Their entrypoints are located at the root of the repository for
+  ease-of-consumption's sake.
+
+  **Avoid** including the extension to those files because that's more subject
+  to breaking changes in case we want to change the tool's programming language
+  later.
+
+- In case the tool has subcommands, they are located at `./cmd/$TOOL/$SUBCOMMAND`
+
+  This is to avoid noisy handling of too many commands within a single file.
+
+Here's an example:
+
+```
+/repository
+├── cmd
+│  └── rs
+│     └── upload.sh
+└── rs
+```
+
+`rs` is the tool entrypoint and `upload.sh` corresponds to the `upload`
+subcommand.
+
+### Maintenance
+
+The `./tasks` directory groups scripts for tasks related to project maintenance,
+such as running linters and tests.
 
 ## Tests <a name="development-tests"></a>
 
