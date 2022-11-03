@@ -25,9 +25,9 @@ touch_snapshot() {
 }
 
 # Compares the status as well as the output of a given command with the file
-# stored in ./__snapshot__ for a given tests. The first line of the snapshot
-# file contains the exit code of the command and the remainder of the file
-# stores the command's output.
+# stored in ./snapshots for a given tests. The first line of the snapshot file
+# contains the exit code of the command and the remainder of the file stores the
+# command's output.
 assert_snapshot() {
   local mode="${1:-}"
 

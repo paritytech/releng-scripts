@@ -5,7 +5,7 @@
 
 TESTS_DIR="${BASH_SOURCE[0]%/*}"
 PROJECT_ROOT="${TESTS_DIR%/*}"
-SNAPSHOTS_DIR="$TESTS_DIR/__snapshot__"
+SNAPSHOTS_DIR="$TESTS_DIR/snapshots"
 
 # Those files should be ignored in .gitignore
 SNAPSHOTS_OVERWRITE_FILE="$TESTS_DIR/.snapshots-overwrite"
