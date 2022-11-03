@@ -33,4 +33,3 @@ git ls-files --full-name | \
     esac
   done | \
   xargs -P "$(nproc)" -L 1 shellcheck -x --source-path=SCRIPTDIR
-
