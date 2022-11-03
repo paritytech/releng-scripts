@@ -30,6 +30,8 @@ on_exit() {
 }
 trap on_exit EXIT
 
+# Usage guidance
+
 print_help() {
 echo "
 Usage: $this_filename [OPTIONS...] SUBCOMMAND [SUBCOMMAND_ARGS...]

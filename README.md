@@ -9,6 +9,9 @@
   - [Locally](#usage-locally)
 - [Development](#development)
   - [Repository structure](#development-repository-structure)
+    - [External consumption](#development-repository-structure-external-consumption)
+    - [Tools](#development-repository-structure-tools)
+    - [Maintenance](#development-repository-structure-maintenance)
   - [Tests](#development-tests)
   - [Linters](#development-linters)
   - [S3](#development-s3)
@@ -69,16 +72,15 @@ Clone this repository and run the scripts
 
 # Development <a name="development"></a>
 
-## Repository structure <a name="#development-repository-structure"></a>
+## Repository structure <a name="development-repository-structure"></a>
 
-### External consumption
+### External consumption <a name="development-repository-structure-external-consumption"></a>
 
-If the file is meant for external consumption, such as the tools' entrypoints,
-avoid adding the extension because that's more subject to breaking changes in
-case we want to change the tool's programming language later.
-
+If a script is meant for external consumption, such as the tools' entrypoints,
+then avoid adding file extensions to them since that's more subject to breaking
+changes in case we want to change the script's programming language later.
 Adding the extension is encouraged for files which are not meant for external
-consumption, i.e. scripts which are run by other scripts or invoked through some
+consumption, i.e. scripts which are used only internally or are run through some
 command runner such as `just`.
 
 Here's an example:
@@ -96,16 +98,18 @@ include an extension. On the other hand, `upload.sh`, which corresponds to the
 `upload` subcommand of `rs`, can keep its extension because it's not meant for
 external consumption, as it's invoked by `rs`.
 
-### Tools
+### Tools <a name="development-repository-structure-tools"></a>
 
 Tools are organized with the following hierarchy:
 
 - Their entrypoints are located at the root of the repository for
-  ease-of-consumption's sake.
+  ease-of-external-consumption's sake.
 
-  **Avoid** including the extension to those files because that's more subject
-  to breaking changes in case we want to change the tool's programming language
+  Avoid including the extension to those files because that's more subject to
+  breaking changes in case we want to change the tool's programming language
   later.
+
+  Please maintain an entry to the tools in `./justfile` for ease-of-use's sake.
 
 - In case the tool has subcommands, they are located at `./cmd/$TOOL/$SUBCOMMAND`
 
@@ -121,13 +125,15 @@ Here's an example:
 └── rs
 ```
 
-`rs` is the tool entrypoint and `upload.sh` corresponds to the `upload`
-subcommand.
+`rs` is the tool's entrypoint and `upload.sh` corresponds to the `upload`
+subcommand of `rs`.
 
-### Maintenance
+### Maintenance <a name="development-repository-structure-maintenance"></a>
 
 The `./tasks` directory groups scripts for tasks related to project maintenance,
 such as running linters and tests.
+
+Please maintain an entry to those scripts in `./justfile` for ease-of-use's sake.
 
 ## Tests <a name="development-tests"></a>
 

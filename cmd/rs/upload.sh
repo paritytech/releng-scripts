@@ -88,6 +88,8 @@ upload_s3() {
   "${cmd[@]}"
 }
 
+# Usage guidance
+
 print_help() {
   echo "
 Usage: $run [OPTIONS...] \\
