@@ -1,10 +1,10 @@
 set positional-arguments
 
 tests *args:
-  ./run tests "$@"
+  ./tasks/tests.sh "$@"
 
 linters *args:
-  ./run linters "$@"
+  ./tasks/linters.sh "$@"
 
 bukt *args:
   ./bukt "$@"

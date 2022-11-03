@@ -62,7 +62,7 @@ fixtures_server() {
       # occasionally processes would be lingering after the test suite had
       # finished. We chose to run it within a TMUX session so that it can always
       # be terminated cleanly, either within the test (with `fixtures_server
-      # stop`) or in ../run (in the on_exit trap function).
+      # stop`) or in ../tasks/tests.sh (in the on_exit trap function).
 
       wait_for_tmux
 

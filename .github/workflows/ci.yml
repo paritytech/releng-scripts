@@ -18,7 +18,7 @@ jobs:
         run: sudo apt install -y shellcheck
 
       - name: Run linters
-        run: ./run linters
+        run: ./tasks/linters.sh
 
   test:
     runs-on: ubuntu-latest
@@ -35,4 +35,4 @@ jobs:
           tmux new-session -t "START-$$" -d
 
       - name: Run tests
-        run: ./run tests --check-stale-snapshots
+        run: ./tasks/tests.sh --check-stale-snapshots
