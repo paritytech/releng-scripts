@@ -14,10 +14,8 @@ tests_dir="$project_root/tests"
 . "$tests_dir/vars.bash"
 
 cleanup_tests() {
-  rm -rf \
-    "${AWS_DESTINATIONS_DIR:-}" \
-    "${SNAPSHOTS_OVERWRITE_FILE:-}"
-  if [ -e "${TESTS_CLEANUP_SESSIONS_FILE:-}" ]; then
+  rm -rf "$AWS_DESTINATIONS_DIR" "$SNAPSHOTS_OVERWRITE_FILE"
+  if [ -e "$TESTS_CLEANUP_SESSIONS_FILE" ]; then
     while IFS= read -r session; do
       if [ ! "$session" ]; then
         continue
