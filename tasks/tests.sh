@@ -105,7 +105,7 @@ if bats -j "$(nproc)" "$tests_dir"; then
   fi
 else
   exit_code=$?
-  log "In case the commands' output is not matching the snapshots, try the --update flag"
-  log "In case some stale snapshots were found, try the --delete-stale-snapshots flag"
+  log "In case the commands' outputs are not matching the snapshots, try the --update flag"$'\n'
+  log "In case some stale snapshots were found, try the --delete-stale-snapshots flag"$'\n'
   exit $exit_code
 fi

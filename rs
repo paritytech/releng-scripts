@@ -39,8 +39,12 @@ Usage: $this_filename [OPTIONS...] SUBCOMMAND [SUBCOMMAND_ARGS...]
 SUBCOMMANDS
 
   * upload
-    Used to upload the files to some cloud storage.
+    Uploads the files to some cloud storage.
     Use \`$this_filename upload --help\` for usage guidance.
+
+  * delete
+    Deletes files from some cloud storage.
+    Use \`$this_filename delete --help\` for usage guidance.
 "
 }
 
@@ -59,7 +63,7 @@ main() {
 
   local subcommand="$1"; shift
   case "$subcommand" in
-    upload)
+    upload|delete)
       "$project_root/cmd/$this_filename/$subcommand.sh" "$@"
     ;;
     *)

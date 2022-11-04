@@ -8,10 +8,14 @@ subcmds_dir="${this_file%/*}"
 cmd_dir="${subcmds_dir%/*}"
 project_root="${cmd_dir%/*}"
 this_filename="${this_file:$(( ${#subcmds_dir} + 1 ))}"
-run="${subcmds_dir:$(( ${#cmd_dir} + 1 ))} ${this_filename%.*}"
+this_subcommand="${this_filename%.*}"
+run="${subcmds_dir:$(( ${#cmd_dir} + 1 ))} $this_subcommand"
 
 # shellcheck source=../../lib.sh
 . "$project_root/lib.sh"
+
+# shellcheck source=./lib.sh
+. "$subcmds_dir/lib.sh"
 
 on_exit() {
   local exit_code=$?
@@ -26,10 +30,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
-# Functions for uploading files to the target backends.
-# Those functions receive arguments in a predefined order.
-
-upload_s3() {
+upload_to_s3() {
   local file="$1"; shift
   local bucket="$1"; shift
   local bucket_key="$1"; shift
@@ -110,64 +111,11 @@ Usage: $run [OPTIONS...] \\
   * --overwrite
     Use it to disable the check before overwriting a file
 
-  * --debug
-    Enable debug mode; useful for testing the tool locally
-
   * --help
     Print this help
 
 
-OPERATIONS
-
-  * release REPOSITORY VERSION
-
-    Used to upload the GitHub Release artifacts for a given REPOSITORY.
-
-  * gha
-
-    This operation is meant to be used from inside of GitHub Workflows. It does
-    not require arguments because it leverages the environment variables present
-    in GitHub Workflows.
-
-  * custom DIRECTORY
-
-    Accepts one positional argument, [DIRECTORY], which is the directory where
-    the file will be uploaded to. For example:
-
-    $this_filename --bucket test \\
-      custom my/custom/path \\
-      s3 \\
-      foo.txt
-
-    That will make the file be uploaded to s3://test/my/custom/path/foo.txt.
-
-    Note: DIRECTORY cannot start or end with '/', as that's the delimiter used
-    for concatenating the final file destination.
-
-BACKENDS
-
-  * s3 [--s3mock]
-
-    Targets AWS S3.
-
-    --s3mock can be optionally provided for setting up the use for targetting a
-    local instance https://github.com/adobe/S3Mock. Consult the README for how
-    to set up a S3Mock local server.
-
-
-[BACKEND_CLI_ARGS...]
-
-  [BACKEND_CLI_ARGS...] defines CLI arguments to be forwarded to the CLI tool
-  assigned to a given BACKEND. The arguments MUST start with \"-\" and MUST be
-  terminated with \"--\". For example:
-
-    $this_filename --bucket test \\
-      custom custom/path \\
-      s3 - --acl write -- \\
-      foo.txt
-
-    That will append the \"--acl\" and \"write\" arguments to the S3 CLI's
-    default arguments.
+$(print_shared_options_usage "$run")
 
 
 [LOCATION...]
@@ -211,87 +159,11 @@ main() {
     DRY_RUN=true
   fi
 
-  # Handle the operation
+  handle_operation "$@"
+  set -- "${__handle_operation[@]}"
 
-  local upload_dir
-  local operation="$1"; shift
-  case "$operation" in
-    release)
-      local repository="$1"; shift
-      local version="$1"; shift
-      upload_dir="$repository/$version"
-    ;;
-    gha)
-      upload_dir="$GITHUB_REPOSITORY_OWNER/gh-workflow/$GITHUB_WORKFLOW/$GITHUB_RUN_ID"
-    ;;
-    custom)
-      upload_dir="$1"; shift
-      if [ "${upload_dir:: 1}" == '/' ]; then
-        die "Custom upload directory can't start with '/': $upload_dir"
-      fi
-      if [ "${upload_dir: -1}" == '/' ]; then
-        die "Custom upload directory can't end with '/': $upload_dir"
-      fi
-    ;;
-    *)
-      die "Invalid operation: $operation"
-    ;;
-  esac
-
-  # Handle the backend
-
-  local backend_options=()
-
-  local backend="$1"; shift
-  case "$backend" in
-    s3)
-      upload_fn=upload_s3
-
-      if [ ! "${bucket:-}" ]; then
-        if [ "${AWS_BUCKET:-}" ]; then
-          bucket="$AWS_BUCKET"
-        else
-          die "Could not infer the target bucket from --bucket or \$AWS_BUCKET"
-        fi
-      fi
-
-      get_opt consume-optional-bool s3mock "$@"
-      if [ "${__get_opt_value:-}" ]; then
-        set -- "${__get_opt_args[@]}"
-
-        # Disables urllib warnings for self-signed HTTPS certificates when
-        # targetting a local S3 mock service such as https://github.com/adobe/S3Mock
-        export PYTHONWARNINGS="ignore:Unverified HTTPS request"
-
-        backend_options+=(
-          "--endpoint-url=https://localhost:9191"
-          "--no-verify-ssl"
-        )
-      fi
-    ;;
-    *)
-      die "Invalid backend: $backend"
-    ;;
-  esac
-
-  # Collect options to be forwarded to the backend's CLI
-
-  if [ "$1" == '-' ]; then
-    # "-" starts the chain of arguments to be passed to the backend
-    shift
-    while [ $# -gt 0 ]; do
-      case "$1" in
-        --) # "--" finishes the chain of arguments to be passed to the backend
-          shift
-          break
-        ;;
-        *)
-          backend_options+=("$1")
-          shift
-        ;;
-      esac
-    done
-  fi
+  handle_backend_options "$this_subcommand" "$@"
+  set -- "${__handle_backend_options[@]}"
 
   unset FALLBACK_TO_HELP
 
@@ -324,15 +196,15 @@ main() {
       ;;
     esac
 
-    local upload_destination="$upload_dir/$filename"
+    local remote_destination="$upload_dir/$filename"
 
     if [ ! "${DRY_RUN:-}" ]; then
       log "Uploading file: $file"
-      log "Upload destination: $upload_destination"
+      log "Upload destination: $remote_destination"
     fi
 
     if "$upload_fn" \
-      "$file" "$bucket" "$upload_destination" \
+      "$file" "$bucket" "$remote_destination" \
       "${backend_options[@]}"
     then
       log "Upload exit code: $?"

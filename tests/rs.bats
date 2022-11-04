@@ -21,6 +21,14 @@ uploader_default_args=(
   s3 "$fixtures_dir/foo.txt"
 )
 
+deleter_base_args=(delete --bucket test)
+deleter_dry_args=("${deleter_base_args[@]}" --dry custom test)
+deleter_default_args=(
+  "${deleter_base_args[@]}"
+  custom test
+  s3 "$fixtures_dir/foo.txt"
+)
+
 setup() {
   set -Eeu -o pipefail
   shopt -s inherit_errexit
@@ -53,6 +61,12 @@ teardown() {
 @test "upload help can be printed" {
   touch_snapshot
   run "$project_root/rs" upload --help
+  assert_snapshot status
+}
+
+@test "delete help can be printed" {
+  touch_snapshot
+  run "$project_root/rs" delete --help
   assert_snapshot status
 }
 
@@ -124,5 +138,23 @@ teardown() {
 
   fixtures_server kill
 
+  assert_snapshot
+}
+
+@test "files can be deleted" {
+  touch_snapshot
+  run "$project_root/rs" "${deleter_default_args[@]}"
+  assert_snapshot
+}
+
+@test "uploading with --dry works" {
+  touch_snapshot
+  run "$project_root/rs" "${uploader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}
+
+@test "deleting with --dry works" {
+  touch_snapshot
+  run "$project_root/rs" "${deleter_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
 }

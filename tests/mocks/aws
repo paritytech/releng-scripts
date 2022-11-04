@@ -30,6 +30,27 @@ case "$command" in
           ;;
         esac
       ;;
+      rm)
+        case "$1" in
+          --) # -- "$source" "$destination"
+            shift
+            shift
+            if [ -e "$AWS_DESTINATION_FILE" ]; then
+              readarray -t lines < <(
+                while IFS= read -r line; do
+                  if [[ "$line" != "$destination" ]]; then
+                    echo "$line"
+                  fi
+                done < "$AWS_DESTINATION_FILE"
+              )
+              printf '%s\n' "${lines[@]}" > "$AWS_DESTINATION_FILE"
+            fi
+          ;;
+          *)
+            die "Unsupported argument: $1"
+          ;;
+        esac
+      ;;
       *)
         die "Unsupported subcommand: $subcommand"
       ;;

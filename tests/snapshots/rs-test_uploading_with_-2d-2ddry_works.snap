@@ -1,0 +1,3 @@
+0
+aws s3 cp -- tests/fixtures/foo.txt s3://test/test/foo.txt
+Upload exit code: 0
