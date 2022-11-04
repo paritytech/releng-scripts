@@ -38,18 +38,15 @@ upload_to_s3() {
   local bucket="$2"
   local bucket_key="$3"
 
-  local cmd=(aws s3 cp)
-
-  if [ "${default_backend_options:-}" ]; then
-    cmd+=("${default_backend_options[@]}")
-  fi
-
-  if [ "${backend_options:-}" ]; then
-    cmd+=("${backend_options[@]}")
-  fi
-
   local destination="s3://$bucket/$bucket_key"
-  cmd+=(-- "$file" "$destination")
+  local cmd=(
+    aws s3 cp
+    "${default_backend_options[@]}"
+    "${backend_options[@]}"
+    --
+    "$file"
+    "$destination"
+  )
 
   if [ "${DRY_RUN:-}" ]; then
     log "${cmd[*]}"

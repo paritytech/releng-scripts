@@ -25,7 +25,12 @@ delete_from_s3() {
   local bucket_key="$2"
 
   local destination="s3://$bucket/$bucket_key"
-  local cmd=(aws s3 rm "${backend_options[@]}" "$destination")
+  local cmd=(
+    aws s3 rm
+    "${default_backend_options[@]}"
+    "${backend_options[@]}"
+    "$destination"
+  )
 
   if [ "${DRY_RUN:-}" ]; then
     log "${cmd[*]}"
