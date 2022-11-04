@@ -21,12 +21,11 @@ run="${subcmds_dir:$(( ${#cmd_dir} + 1 ))} $this_subcommand"
 # Those functions receive arguments in a predefined order.
 
 delete_from_s3() {
-  local bucket="$1"; shift
-  local bucket_key="$1"; shift
-  local backend_options=("$@")
+  local bucket="$1"
+  local bucket_key="$2"
 
   local destination="s3://$bucket/$bucket_key"
-  local cmd=(aws s3 rm "${backend_options[@]}" -- "$destination")
+  local cmd=(aws s3 rm "${backend_options[@]}" "$destination")
 
   if [ "${DRY_RUN:-}" ]; then
     log "${cmd[*]}"
@@ -120,10 +119,7 @@ main() {
       log "Deleting destination: $remote_destination"
     fi
 
-    if "$delete_fn" \
-      "$bucket" "$remote_destination" \
-      "${backend_options[@]}"
-    then
+    if "$delete_fn" "$bucket" "$remote_destination"; then
       log "Deletion exit code: $?"
     else
       if [ "${exit_code:-0}" -eq 0 ]; then

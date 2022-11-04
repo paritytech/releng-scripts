@@ -70,9 +70,17 @@ teardown() {
   assert_snapshot status
 }
 
-@test "backend options are properly forwarded" {
+@test "backend options are properly forwarded for upload" {
   touch_snapshot
   run "$project_root/rs" "${uploader_dry_args[@]}" \
+    s3 - --foo --bar -- \
+    PLACEHOLDER
+  assert_snapshot
+}
+
+@test "backend options are properly forwarded for delete" {
+  touch_snapshot
+  run "$project_root/rs" "${deleter_dry_args[@]}" \
     s3 - --foo --bar -- \
     PLACEHOLDER
   assert_snapshot

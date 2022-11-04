@@ -30,14 +30,26 @@ on_exit() {
 }
 trap on_exit EXIT
 
+# Functions for uploading files to the target backends.
+# Those functions receive arguments in a predefined order.
+
 upload_to_s3() {
-  local file="$1"; shift
-  local bucket="$1"; shift
-  local bucket_key="$1"; shift
-  local backend_options=("$@")
+  local file="$1"
+  local bucket="$2"
+  local bucket_key="$3"
+
+  local cmd=(aws s3 cp)
+
+  if [ "${default_backend_options:-}" ]; then
+    cmd+=("${default_backend_options[@]}")
+  fi
+
+  if [ "${backend_options:-}" ]; then
+    cmd+=("${backend_options[@]}")
+  fi
 
   local destination="s3://$bucket/$bucket_key"
-  local cmd=(aws s3 cp "${backend_options[@]}" -- "$file" "$destination")
+  cmd+=(-- "$file" "$destination")
 
   if [ "${DRY_RUN:-}" ]; then
     log "${cmd[*]}"
@@ -65,7 +77,7 @@ upload_to_s3() {
       --output json \
       --bucket "$bucket" \
       --key "$bucket_key" \
-      "${backend_options[@]}"
+      "${default_backend_options[@]:-}"
     )"
     case "$response" in
       *"Not Found")
@@ -203,10 +215,7 @@ main() {
       log "Upload destination: $remote_destination"
     fi
 
-    if "$upload_fn" \
-      "$file" "$bucket" "$remote_destination" \
-      "${backend_options[@]}"
-    then
+    if "$upload_fn" "$file" "$bucket" "$remote_destination"; then
       log "Upload exit code: $?"
     else
       if [ "${exit_code:-0}" -eq 0 ]; then

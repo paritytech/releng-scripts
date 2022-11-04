@@ -48,7 +48,7 @@ handle_backend_options() {
     ;;
   esac
 
-  backend_options=()
+  default_backend_options=()
 
   case "$backend" in
     s3)
@@ -69,7 +69,7 @@ handle_backend_options() {
         # targetting a local S3 mock service such as https://github.com/adobe/S3Mock
         export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
-        backend_options+=(
+        default_backend_options+=(
           "--endpoint-url=https://localhost:9191"
           "--no-verify-ssl"
         )
@@ -81,6 +81,8 @@ handle_backend_options() {
   esac
 
   # Collect options to be forwarded to the backend's CLI
+
+  backend_options=()
 
   if [ "$1" == '-' ]; then
     # "-" starts the chain of arguments to be passed to the backend

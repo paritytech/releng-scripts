@@ -1,0 +1,3 @@
+0
+aws s3 rm --foo --bar s3://test/test/PLACEHOLDER
+Deletion exit code: 0
