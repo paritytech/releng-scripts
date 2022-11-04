@@ -41,8 +41,8 @@ upload_to_s3() {
   local destination="s3://$bucket/$bucket_key"
   local cmd=(
     aws s3 cp
-    "${default_backend_options[@]}"
-    "${backend_options[@]}"
+    "${general_backend_options[@]}"
+    "${backend_upload_options[@]}"
     --
     "$file"
     "$destination"
@@ -74,7 +74,7 @@ upload_to_s3() {
       --output json \
       --bucket "$bucket" \
       --key "$bucket_key" \
-      "${default_backend_options[@]:-}"
+      "${general_backend_options[@]:-}"
     )"
     case "$response" in
       *"Not Found")
@@ -111,7 +111,7 @@ Usage: $run [OPTIONS...] \\
 [OPTIONS...]
 
   * --bucket
-    The bucket which the files will be uploaded to. The bucket can also be
+    The bucket which the files will be uploaded to. If not specified it's
     inferred from environment variables depending on the backend.
 
   * --dry
@@ -122,6 +122,10 @@ Usage: $run [OPTIONS...] \\
 
   * --help
     Print this help
+
+  * --visibility [public|private]
+    Set the visibility for the file to be uploaded. Defaults to public if not
+    specified.
 
 
 $(print_shared_options_usage "$run")
@@ -154,6 +158,15 @@ main() {
     set -- "${__get_opt_args[@]}"
   fi
 
+  local visibility
+  get_opt consume-optional visibility "$@"
+  if [ "${__get_opt_value:-}" ]; then
+    visibility="$__get_opt_value"
+    set -- "${__get_opt_args[@]}"
+  else
+    visibility=public
+  fi
+
   unset OVERWRITE
   get_opt consume-optional-bool overwrite "$@"
   if [ "${__get_opt_value:-}" ]; then
@@ -171,7 +184,7 @@ main() {
   handle_operation "$@"
   set -- "${__handle_operation[@]}"
 
-  handle_backend_options "$this_subcommand" "$@"
+  handle_backend_options "$this_subcommand" "$visibility" "$@"
   set -- "${__handle_backend_options[@]}"
 
   unset FALLBACK_TO_HELP

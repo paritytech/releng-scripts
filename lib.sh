@@ -75,7 +75,7 @@ get_opt() {
       is_required=true
     ;;
     *)
-      die "Expected [consume-optional | consume-required], got: $operation"
+      die "Invalid operation: $operation"
     ;;
   esac
 

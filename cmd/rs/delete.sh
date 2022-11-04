@@ -27,8 +27,8 @@ delete_from_s3() {
   local destination="s3://$bucket/$bucket_key"
   local cmd=(
     aws s3 rm
-    "${default_backend_options[@]}"
-    "${backend_options[@]}"
+    "${general_backend_options[@]}"
+    "${backend_upload_options[@]}"
     "$destination"
   )
 
@@ -104,7 +104,7 @@ main() {
   handle_operation "$@"
   set -- "${__handle_operation[@]}"
 
-  handle_backend_options "$this_subcommand" "$@"
+  handle_backend_options "$this_subcommand" "" "$@"
   set -- "${__handle_backend_options[@]}"
 
   unset FALLBACK_TO_HELP
