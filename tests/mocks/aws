@@ -19,16 +19,26 @@ case "$command" in
   s3)
     case "$subcommand" in
       cp)
-        case "$1" in
-          --) # -- "$source" "$destination"
-            shift
-            shift
-            echo "$1" >> "$AWS_DESTINATION_FILE"
-          ;;
-          *)
-            die "Unsupported argument: $1"
-          ;;
-        esac
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --) # -- "$source" "$destination"
+              shift
+              shift
+              echo "$1" >> "$AWS_DESTINATION_FILE"
+              exit
+            ;;
+            --acl=*)
+              shift
+            ;;
+            --acl)
+              shift
+              shift
+            ;;
+            *)
+              die "Unsupported argument: $1"
+            ;;
+          esac
+        done
       ;;
       rm)
         for arg in "$@"; do

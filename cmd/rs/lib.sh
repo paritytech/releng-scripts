@@ -34,6 +34,7 @@ handle_operation() {
 
 handle_backend_options() {
   local command="$1"; shift
+  local visibility="$1"; shift
 
   backend="$1"; shift
   case "$command" in
@@ -48,7 +49,36 @@ handle_backend_options() {
     ;;
   esac
 
-  default_backend_options=()
+  general_backend_options=() # options which apply to the whole backend's CLI
+  backend_upload_options=()  # options which apply only to the upload command
+
+  if [ "$visibility" ]; then
+    case "$backend" in
+      s3)
+        case "$command" in
+          upload)
+            case "$visibility" in
+              public)
+                backend_upload_options+=(--acl public-read)
+              ;;
+              private)
+                backend_upload_options+=(--acl private)
+              ;;
+              *)
+                die "Invalid access: $visibility"
+              ;;
+            esac
+          ;;
+          *)
+            die "Access is not is handled for command: $command"
+          ;;
+        esac
+      ;;
+      *)
+        die "Access is not is handled for backend: $backend"
+      ;;
+    esac
+  fi
 
   case "$backend" in
     s3)
@@ -69,7 +99,7 @@ handle_backend_options() {
         # targetting a local S3 mock service such as https://github.com/adobe/S3Mock
         export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
-        default_backend_options+=(
+        general_backend_options+=(
           "--endpoint-url=https://localhost:9191"
           "--no-verify-ssl"
         )
@@ -82,8 +112,6 @@ handle_backend_options() {
 
   # Collect options to be forwarded to the backend's CLI
 
-  backend_options=()
-
   if [ "$1" == '-' ]; then
     # "-" starts the chain of arguments to be passed to the backend
     shift
@@ -94,7 +122,7 @@ handle_backend_options() {
           break
         ;;
         *)
-          backend_options+=("$1")
+          backend_upload_options+=("$1")
           shift
         ;;
       esac
@@ -132,7 +160,7 @@ print_shared_options_usage() {
     That will make the file be uploaded to s3://test/my/custom/path/foo.txt.
 
     Note: DIRECTORY cannot start or end with '/', as that's the delimiter used
-    for concatenating the final file destination.
+    for concatenating the whole file destination.
 
 
 BACKENDS
