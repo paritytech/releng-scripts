@@ -44,13 +44,13 @@ delete_from_s3() {
 
 print_help() {
   echo "
-Usage: $run [OPTIONS...] \\
-  OPERATION [OPERATION_ARGS...] \\
-  BACKEND [BACKEND_ARGS...] [- [BACKEND_CLI_ARGS...] --] \\
-  [FILE...]
+Usage: $run [OPTIONS] \\
+  OPERATION [OPERATION_ARGS] \\
+  BACKEND [BACKEND_ARGS] [- [BACKEND_CLI_ARGS] --] \\
+  FILE...
 
 
-[OPTIONS...]
+[OPTIONS]
 
   * --bucket
     The bucket which the files will be uploaded to. The bucket can also be
@@ -66,7 +66,7 @@ Usage: $run [OPTIONS...] \\
 $(print_shared_options_usage "$run")
 
 
-[FILE...]
+FILE...
 
   The file names to be deleted from the target bucket.
 

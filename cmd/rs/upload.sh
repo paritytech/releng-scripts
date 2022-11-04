@@ -85,7 +85,7 @@ upload_to_s3() {
         if echo -n "$response" | jq -e; then
           # Valid JSON response for metadata, which means that the file exists
           log error "File already exists: $destination"
-          log +error "Use \`$run --overwrite [...]\` to overwrite it"
+          log +error "Use \`$run --overwrite ...\` to overwrite it"
         else
           log error "Object metadata response could not be parsed as JSON"
           log +error "Response: $response"
@@ -102,13 +102,13 @@ upload_to_s3() {
 
 print_help() {
   echo "
-Usage: $run [OPTIONS...] \\
-  OPERATION [OPERATION_ARGS...] \\
-  BACKEND [BACKEND_ARGS...] [- [BACKEND_CLI_ARGS...] --] \\
-  [LOCATION...]
+Usage: $run [OPTIONS] \\
+  OPERATION [OPERATION_ARGS] \\
+  BACKEND [BACKEND_ARGS] [- [BACKEND_CLI_ARGS] --] \\
+  LOCATION...
 
 
-[OPTIONS...]
+OPTIONS...
 
   * --bucket
     The bucket which the files will be uploaded to. If not specified it's
@@ -123,7 +123,7 @@ Usage: $run [OPTIONS...] \\
   * --help
     Print this help
 
-  * --visibility [public|private]
+  * --visibility {public|private}
     Set the visibility for the file to be uploaded. Defaults to public if not
     specified.
 
@@ -131,7 +131,7 @@ Usage: $run [OPTIONS...] \\
 $(print_shared_options_usage "$run")
 
 
-[LOCATION...]
+LOCATION...
 
   The file paths or URLs to be uploaded to the target bucket.
 

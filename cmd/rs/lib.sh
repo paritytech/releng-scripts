@@ -174,9 +174,9 @@ BACKENDS
     to set up a S3Mock local server.
 
 
-[BACKEND_CLI_ARGS...]
+[BACKEND_CLI_ARGS]
 
-  [BACKEND_CLI_ARGS...] defines CLI arguments to be forwarded to the CLI tool
+  [BACKEND_CLI_ARGS] defines CLI arguments to be forwarded to the CLI tool
   assigned to a given BACKEND. The arguments MUST start with \"-\" and MUST be
   terminated with \"--\". For example:
 
