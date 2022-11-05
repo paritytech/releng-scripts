@@ -120,7 +120,7 @@ main() {
     local remote_destination="$upload_dir/$filename"
 
     if [ ! "${DRY_RUN:-}" ]; then
-      log "Deleting file: $filename"
+      log "For input file: $filename"
       log "Deleting destination: $remote_destination"
     fi
 
