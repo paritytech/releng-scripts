@@ -65,17 +65,17 @@ handle_backend_options() {
                 backend_upload_options+=(--acl private)
               ;;
               *)
-                die "Invalid access: $visibility"
+                die "Invalid visibility: $visibility"
               ;;
             esac
           ;;
           *)
-            die "Access is not is handled for command: $command"
+            die "Visibility is not is handled for command: $command"
           ;;
         esac
       ;;
       *)
-        die "Access is not is handled for backend: $backend"
+        die "Visibility is not is handled for backend: $backend"
       ;;
     esac
   fi
@@ -86,7 +86,7 @@ handle_backend_options() {
         if [ "${AWS_BUCKET:-}" ]; then
           bucket="$AWS_BUCKET"
         else
-          die "Could not infer the target bucket from --bucket or \$AWS_BUCKET"
+          die "Could not infer the target bucket from --bucket nor \$AWS_BUCKET"
         fi
       fi
 

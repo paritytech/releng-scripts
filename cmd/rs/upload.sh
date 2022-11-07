@@ -108,7 +108,7 @@ Usage: $run [OPTIONS] \\
   LOCATION...
 
 
-OPTIONS...
+[OPTIONS]
 
   * --bucket
     The bucket which the files will be uploaded to. If not specified it's
