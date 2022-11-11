@@ -128,7 +128,7 @@ Usage: $run [OPTIONS] \\
     specified.
 
 
-$(print_shared_options_usage "$run")
+$(print_shared_options_usage "$run" "uploaded to")
 
 
 LOCATION...

@@ -17,27 +17,15 @@ run="${subcmds_dir:$(( ${#cmd_dir} + 1 ))} $this_subcommand"
 # shellcheck source=./lib.sh
 . "$subcmds_dir/lib.sh"
 
-# Functions for deleting files from the target backends.
+# Functions for downloading files from the target backends.
 # Those functions receive arguments in a predefined order.
 
-delete_from_s3() {
+download_from_s3() {
   local bucket="$1"
   local bucket_key="$2"
 
-  local destination="s3://$bucket/$bucket_key"
-  local cmd=(
-    aws s3 rm
-    "${general_backend_options[@]}"
-    "${backend_upload_options[@]}"
-    "$destination"
-  )
-
-  if [ "${DRY_RUN:-}" ]; then
-    log "${cmd[*]}"
-    return 0
-  fi
-
-  "${cmd[@]}"
+  >&2 echo "TODO: IMPLEMENT ME!"
+  exit 1
 }
 
 # Usage guidance
@@ -53,22 +41,22 @@ Usage: $run [OPTIONS] \\
 [OPTIONS]
 
   * --bucket
-    The bucket which the files will be uploaded to. The bucket can also be
+    The bucket which the files will be downloaded from. The bucket can also be
     inferred from environment variables depending on the backend.
 
   * --dry
-    Process the arguments but don't actually delete the files, i.e. a test run
+    Process the arguments but don't actually download the files, i.e. a test run
 
   * --help
     Print this help
 
 
-$(print_shared_options_usage "$run" "deleted from")
+$(print_shared_options_usage "$run" "downloaded from")
 
 
 FILE...
 
-  The file names to be deleted from the target bucket.
+  The file names to be download from the target bucket.
 
   In case you pass a file path rather than a file name, only the file name is
   considered from it.
@@ -78,7 +66,6 @@ FILE...
 # Script entrypoint
 
 main() {
-  # shellcheck disable=SC2034 # FALLBACK_TO_HELP is used in ../rs
   FALLBACK_TO_HELP="$run --help"
 
   get_opt consume-optional-bool help "$@"
@@ -111,7 +98,7 @@ main() {
 
   local exit_code
 
-  # Delete all the input locations
+  # Download all the input locations
 
   for location in "$@"; do
     local filename
@@ -121,18 +108,18 @@ main() {
 
     if [ ! "${DRY_RUN:-}" ]; then
       log "For input file: $filename"
-      log "Deleting destination: $remote_destination"
+      log "Downloading destination: $remote_destination"
     fi
 
-    if "$delete_fn" "$bucket" "$remote_destination"; then
-      log "Deletion exit code: $?"
+    if "$download_fn" "$bucket" "$remote_destination"; then
+      log "Download exit code: $?"
     else
       if [ "${exit_code:-0}" -eq 0 ]; then
         exit_code=1
       else
         exit_code=$?
       fi
-      log error "Deletion command failed for file: $filename"
+      log error "Download command failed for file: $filename"
       log +error "Exit code: $exit_code"
     fi
   done

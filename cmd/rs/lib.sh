@@ -44,6 +44,9 @@ handle_backend_options() {
     delete)
       delete_fn="delete_from_$backend"
     ;;
+    download)
+      download_fn="download_from_$backend"
+    ;;
     *)
       die "Invalid subcommand: $command"
     ;;
@@ -134,6 +137,7 @@ handle_backend_options() {
 
 print_shared_options_usage() {
   local run="$1"
+  local action="$2"
 
   echo "OPERATIONS
 
@@ -157,7 +161,7 @@ print_shared_options_usage() {
       s3 \\
       foo.txt
 
-    That will make the file be uploaded to s3://test/my/custom/path/foo.txt.
+    That will make the file be $action s3://test/my/custom/path/foo.txt.
 
     Note: DIRECTORY cannot start or end with '/', as that's the delimiter used
     for concatenating the whole file destination.

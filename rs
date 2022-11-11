@@ -64,7 +64,7 @@ main() {
 
   local subcommand="$1"; shift
   case "$subcommand" in
-    upload|delete)
+    upload|delete|download)
       "$project_root/cmd/$this_filename/$subcommand.sh" "$@"
     ;;
     *)
