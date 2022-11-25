@@ -150,9 +150,9 @@ export AWS_DEFAULT_REGION=us-east-1
 export AWS_BUCKET=test
 ```
 
-Then run the S3Mock docker:
+Then start S3Mock:
 
-`docker run -p 9090:9090 -p 9191:9191 -e validKmsKeys=arn:aws:kms:"$AWS_DEFAULT_REGION":"$AWS_ACCESS_KEY_ID":key/"$AWS_SECRET_ACCESS_KEY" -e initialBuckets="$AWS_BUCKET" -t adobe/s3mock:latest`
+`./scripts/start-s3-mock.sh`
 
 Then try to upload a file:
 
