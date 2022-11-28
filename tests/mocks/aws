@@ -76,13 +76,15 @@ case "$command" in
         key="$__get_opt_value"
         set -- "${__get_opt_args[@]}"
 
-        input_destination="s3://$bucket/$key"
-        while IFS= read -r destination; do
-          if [ "$destination" == "$input_destination" ]; then
-            found_destination=true
-            break
-          fi
-        done < "$AWS_DESTINATION_FILE"
+        if [ -e "$AWS_DESTINATION_FILE" ]; then
+          input_destination="s3://$bucket/$key"
+          while IFS= read -r destination; do
+            if [ "$destination" == "$input_destination" ]; then
+              found_destination=true
+              break
+            fi
+          done < "$AWS_DESTINATION_FILE"
+        fi
 
         get_opt consume output "$@"
         output="$__get_opt_value"
