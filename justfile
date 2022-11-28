@@ -8,7 +8,7 @@ _default:
 
 # Show some help
 help:
-	just --list
+  just --list
 
 tests *args:
   ./tasks/tests.sh "$@"
