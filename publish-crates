@@ -449,54 +449,59 @@ main() {
     fi
   done < <(echo "$spub_publish")
 
-  if [ ${#crates_to_publish[*]} -eq 0 ] && [ "${changed_pr_files:-}" ]; then
-    for file in "${changed_pr_files[@]}"; do
-      local current="$file"
-      while true; do
-        current="$(dirname "$current")"
-        if [ "$current" == . ]; then
-          break
-        fi
+  if [ ${#crates_to_publish[*]} -eq 0 ]; then
+    if [ "${changed_pr_files:-}" ]; then
+      for file in "${changed_pr_files[@]}"; do
+        local current="$file"
+        while true; do
+          current="$(dirname "$current")"
+          if [ "$current" == . ]; then
+            break
+          fi
 
-        local manifest_path="$root/$current/Cargo.toml"
-        if [ -e "$manifest_path" ]; then
-          setup_yj
-          local manifest_json
-          manifest_json="$("$yj" -tj < "$manifest_path")"
+          local manifest_path="$root/$current/Cargo.toml"
+          if [ -e "$manifest_path" ]; then
+            setup_yj
+            local manifest_json
+            manifest_json="$("$yj" -tj < "$manifest_path")"
 
-          local publish
-          publish="$(echo -n "$manifest_json" | jq -r '.package.publish')"
-          case "$publish" in
-            null|true)
-              local crate
-              crate="$(echo -n "$manifest_json" | jq -e -r '.package.name')"
+            local publish
+            publish="$(echo -n "$manifest_json" | jq -r '.package.publish')"
+            case "$publish" in
+              null|true)
+                local crate
+                crate="$(echo -n "$manifest_json" | jq -e -r '.package.name')"
 
-              local crate_already_inserted
-              for prev_crate_to_check in "${crates_to_publish[@]}"; do
-                if [ "$prev_crate_to_check" == "$crate"  ]; then
-                  crate_already_inserted=true
-                  break
+                local crate_already_inserted
+                for prev_crate_to_check in "${crates_to_publish[@]}"; do
+                  if [ "$prev_crate_to_check" == "$crate"  ]; then
+                    crate_already_inserted=true
+                    break
+                  fi
+                done
+
+                if [ "${crate_already_inserted:-}" ]; then
+                  unset crate_already_inserted
+                else
+                  crates_to_publish+=("$crate")
                 fi
-              done
-
-              if [ "${crate_already_inserted:-}" ]; then
-                unset crate_already_inserted
-              else
-                crates_to_publish+=("$crate")
-              fi
-            ;;
-            false) ;;
-            *)
-              die "Unexpected value for .package.publish of $manifest_path: $publish"
-            ;;
-          esac
-        fi
+              ;;
+              false) ;;
+              *)
+                die "Unexpected value for .package.publish of $manifest_path: $publish"
+              ;;
+            esac
+          fi
+        done
       done
-    done
-    if [ ${#crates_to_publish[*]} -gt 0 ]; then
-      subpub_args+=(--include-crates-dependents)
-    else
-      log "No crate changes were detected for this PR"
+      if [ ${#crates_to_publish[*]} -gt 0 ]; then
+        subpub_args+=(--include-crates-dependents)
+      else
+        log "No crate changes were detected for this PR"
+        exit
+      fi
+    elif [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+      log "No file changes were detected for this PR"
       exit
     fi
   fi
@@ -505,7 +510,6 @@ main() {
     local)
       git config --global user.name "CI"
       git config --global user.email "<>"
-
       apt update -qq
       setup_postgres
       setup_diesel
