@@ -10,9 +10,12 @@ echo "
 publish-crates
 ========================
 
-This script publishes all workspace crates to the target crates.io instance of choice. It can either
-publish them to a local crates.io instance (which is set up by this script) or the official
-crates.io registry.
+This script publishes all workspace crates to the target crates.io instance of
+choice. It can either publish them to a local crates.io instance (which is set
+up by this script) or the official crates.io registry.
+
+This script is intended to be used from GitLab CI. Consider running subpub
+directly if you're interested in running it somewhere else.
 "
 
 set -Eeu -o pipefail
