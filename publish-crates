@@ -346,6 +346,7 @@ check_repository() {
           esac
         ;;
       esac
+      set +x
     done < <(
       curl -sSLf \
         -H "Accept: application/vnd.github.v3.diff" \
