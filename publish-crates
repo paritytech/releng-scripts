@@ -267,7 +267,7 @@ check_cratesio_crate() {
   owners_response="$(curl -sSLf "$owners_url")" || exit_code=$?
   case "$exit_code" in
     22) # 404 response, which means that the crate doesn't exist on crates.io
-      >&2 echo "Crate $crate does not yet exist on crates.io, as per $owners_url. Please contact release-engineering to reserve the name in advance."
+      >&2 echo "Crate $crate does not yet exist on crates.io, as per $owners_url. Please request for the crate name to be reserved in advance."
       return 1
     ;;
     0) ;;
