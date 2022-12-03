@@ -498,6 +498,8 @@ main() {
                 die "Unexpected value for .package.publish of $manifest_path: $publish"
               ;;
             esac
+
+            break
           fi
         done
       done
