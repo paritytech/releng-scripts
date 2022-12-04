@@ -537,7 +537,7 @@ main() {
   esac
 
   for crate_to_publish in "${crates_to_publish[@]}"; do
-    subpub_args+=(--crate "$crate_to_publish")
+    subpub_args+=(--publish-only "$crate_to_publish")
   done
 
   if [ "$spub_start_from" ]; then
