@@ -505,7 +505,7 @@ main() {
       done
       if [ ${#crates_to_publish[*]} -gt 0 ]; then
         for crate in "${crates_to_publish[@]}"; do
-          subpub_args+=(--verify-crate "$crate")
+          subpub_args+=(--verify-only "$crate")
         done
       else
         log "No crate changes were detected for this PR"
