@@ -259,8 +259,7 @@ Actual: $actual_checksum"
 check_cratesio_crate() {
   local crate="$1"
   local cratesio_api="$2"
-  local crate_manifest="$3"
-  local expected_owner="$4"
+  local expected_owner="$3"
 
   log "Checking if the crate $crate is compliant with crates.io"
 
@@ -292,7 +291,7 @@ check_cratesio_crate() {
   done < <(echo "$owners_logins")
 
   if [ ! "${found_owner:-}" ]; then
-    >&2 log "crates.io ownership for crate $crate (from $crate_manifest) is not set up as expected.
+    >&2 log "crates.io ownership for crate $crate is not set up as expected.
 
 The current owners were recognized from $owners_url:
 $owners_logins
@@ -340,7 +339,7 @@ check_repository() {
             null|true)
               local crate
               crate="$(echo -n "$manifest_json" | jq -e -r '.package.name')"
-              selected_crates+=("$crate" "$changed_file")
+              selected_crates+=("$crate")
             ;;
             false) ;;
             *)
@@ -365,13 +364,10 @@ check_repository() {
 
   local exit_code
 
-  for ((i=0; i < ${#selected_crates[*]}; i+=2)); do
-    local crate="${selected_crates[$i]}"
-    local crate_manifest="${selected_crates[$((i+1))]}"
+  for crate in "${selected_crates[@]}"; do
     if ! check_cratesio_crate \
       "$crate" \
       "$cratesio_api" \
-      "$crate_manifest" \
       "$cratesio_crates_owner"
     then
       exit_code=1
