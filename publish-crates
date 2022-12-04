@@ -504,7 +504,9 @@ main() {
         done
       done
       if [ ${#crates_to_publish[*]} -gt 0 ]; then
-        subpub_args+=(--include-crates-dependents)
+        for crate in "${crates_to_publish[@]}"; do
+          subpub_args+=(--verify-crate "$crate_to_publish")
+        done
       else
         log "No crate changes were detected for this PR"
         exit
@@ -535,7 +537,7 @@ main() {
   esac
 
   for crate_to_publish in "${crates_to_publish[@]}"; do
-    subpub_args+=(-c "$crate_to_publish")
+    subpub_args+=(--crate "$crate_to_publish")
   done
 
   if [ "$spub_start_from" ]; then
@@ -543,7 +545,7 @@ main() {
   fi
 
   if [ "$spub_verify_from" ]; then
-    subpub_args+=(-v "$spub_verify_from")
+    subpub_args+=(--verify-from "$spub_verify_from")
   fi
 
   if [ "$spub_after_publish_delay" ]; then
