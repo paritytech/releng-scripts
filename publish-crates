@@ -362,6 +362,9 @@ check_repository() {
     selected_crates=("${workspace_crates[@]}")
   fi
 
+  # TODO: go further after squatted crates are dealt with (paritytech/release-engineering#132)
+  return
+
   local exit_code
 
   for crate in "${selected_crates[@]}"; do
