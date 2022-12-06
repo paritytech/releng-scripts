@@ -501,9 +501,10 @@ main() {
     local)
       git config --global user.name "CI"
       git config --global user.email "<>"
-      setup_diesel
       apt update -qq
       setup_postgres
+      # diesel setup should be after setup_progress because it depends on libpq
+      setup_diesel
       setup_local_cratesio
     ;;
     default)
