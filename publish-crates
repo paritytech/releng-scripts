@@ -24,7 +24,7 @@ shopt -s inherit_errexit
 root="$PWD"
 tmp="$root/.tmp"
 cratesio_dir="$tmp/crates.io"
-cargo_target_dir="$tmp/cargo"
+cargo_root_dir="$tmp/cargo"
 yj="$tmp/yj"
 
 on_exit() {
@@ -162,7 +162,7 @@ setup_subpub() {
   cargo install --quiet \
     --git https://github.com/paritytech/subpub \
     --branch releng \
-    --target-dir "$cargo_target_dir"
+    --root "$cargo_root_dir"
   subpub --version
 }
 
@@ -171,9 +171,7 @@ setup_diesel() {
     --version 1.4.1 \
     --no-default-features \
     --features postgres \
-    --target-dir "$cargo_target_dir"
-  ls "$cargo_target_dir"
-  echo "$PATH"
+    --root "$cargo_root_dir"
   diesel --version
 }
 
@@ -371,8 +369,8 @@ check_repository() {
 setup_environment() {
   mkdir -p "$tmp"
   export PATH="$tmp:$PATH"
-  mkdir -p "$cargo_target_dir"
-  export PATH="$cargo_target_dir/release:$PATH"
+  mkdir -p "$cargo_root_dir"
+  export PATH="$cargo_root_dir/bin:$PATH"
 }
 
 setup_repository() {
