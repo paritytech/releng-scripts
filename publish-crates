@@ -181,6 +181,7 @@ setup_diesel() {
     --version 1.4.1 \
     --no-default-features \
     --features postgres
+  ls "$cargo_target_dir/release"
   diesel --version
 
   if [ "$old_cargo_target_dir" ]; then
