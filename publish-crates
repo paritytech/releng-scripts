@@ -172,6 +172,8 @@ setup_diesel() {
     --no-default-features \
     --features postgres \
     --target-dir "$cargo_target_dir"
+  ls "$cargo_target_dir"
+  echo "$PATH"
   diesel --version
 }
 
