@@ -159,37 +159,20 @@ setup_local_cratesio() {
 }
 
 setup_subpub() {
-  local old_cargo_target_dir="${CARGO_TARGET_DIR:-}"
-  export CARGO_TARGET_DIR="$cargo_target_dir"
-
-  cargo install --quiet --git https://github.com/paritytech/subpub --branch releng
+  cargo install --quiet \
+    --git https://github.com/paritytech/subpub \
+    --branch releng \
+    --target-dir "$cargo_target_dir"
   subpub --version
-
-  if [ "$old_cargo_target_dir" ]; then
-    export CARGO_TARGET_DIR="$old_cargo_target_dir"
-  else
-    unset CARGO_TARGET_DIR
-    export -n CARGO_TARGET_DIR
-  fi
 }
 
 setup_diesel() {
-  local old_cargo_target_dir="${CARGO_TARGET_DIR:-}"
-  export CARGO_TARGET_DIR="$cargo_target_dir"
-
   cargo install --quiet diesel_cli \
     --version 1.4.1 \
     --no-default-features \
-    --features postgres
-  ls "$cargo_target_dir/release"
+    --features postgres \
+    --target-dir "$cargo_target_dir"
   diesel --version
-
-  if [ "$old_cargo_target_dir" ]; then
-    export CARGO_TARGET_DIR="$old_cargo_target_dir"
-  else
-    unset CARGO_TARGET_DIR
-    export -n CARGO_TARGET_DIR
-  fi
 }
 
 setup_postgres() {
