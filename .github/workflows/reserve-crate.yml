@@ -21,8 +21,8 @@ on:
         type: choice
         required: true
         options:
-        - lib
-        - bin
+          - lib
+          - bin
 
 jobs:
   reserve-crate:
