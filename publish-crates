@@ -141,6 +141,10 @@ setup_local_cratesio() {
             -print \
             -prune \
             -exec rm -rf {} \;
+          find "${CARGO_HOME:-$HOME/.cargo}" \
+            -type f -path "**/$crate-$crate_version.crate" \
+            -print \
+            -exec rm -f {} \;
 
           echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
         else
