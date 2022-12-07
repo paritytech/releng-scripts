@@ -344,7 +344,7 @@ check_repository() {
   local selected_crates=()
 
   # if the branch belongs to a pull request, then check only the changed files
-  # otherwise, assume to be running on master and take all crates into account
+  # changed within the pull request; otherwise, take all crates into account
   if [ "$is_pr_branch" ]; then
     local pr_number="$this_branch"
 
