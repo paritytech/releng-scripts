@@ -23,8 +23,8 @@ shopt -s inherit_errexit
 
 root="$PWD"
 tmp="$root/.tmp"
-cratesio_dir="$tmp/crates.io"
-cargo_root_dir="$tmp/cargo"
+cratesio_repo="$tmp/crates.io"
+tmp_cargo_root="$tmp/cargo"
 yj="$tmp/yj"
 
 on_exit() {
@@ -74,9 +74,9 @@ set -xv
 setup_local_cratesio() {
   load_workspace_crates
 
-  git clone --branch releng https://github.com/paritytech/crates.io "$cratesio_dir"
+  git clone --branch releng https://github.com/paritytech/crates.io "$cratesio_repo"
 
-  >/dev/null pushd "$cratesio_dir"
+  >/dev/null pushd "$cratesio_repo"
 
   mkdir local_uploads tmp
 
@@ -170,7 +170,7 @@ setup_local_cratesio() {
 
   export SPUB_REGISTRY=local
   export SPUB_CRATES_API=http://localhost:8888/api/v1
-  export CARGO_REGISTRIES_LOCAL_INDEX=file://"$cratesio_dir"/tmp/index-bare
+  export CARGO_REGISTRIES_LOCAL_INDEX=file://"$cratesio_repo"/tmp/index-bare
   export SPUB_REGISTRY_TOKEN="$token"
 }
 
@@ -178,7 +178,7 @@ setup_subpub() {
   cargo install --quiet \
     --git https://github.com/paritytech/subpub \
     --branch releng \
-    --root "$cargo_root_dir"
+    --root "$tmp_cargo_root"
   subpub --version
 }
 
@@ -187,7 +187,7 @@ setup_diesel() {
     --version 1.4.1 \
     --no-default-features \
     --features postgres \
-    --root "$cargo_root_dir"
+    --root "$tmp_cargo_root"
   diesel --version
 }
 
@@ -330,6 +330,7 @@ check_repository() {
       case "$changed_file" in
         */Cargo.toml)
           setup_yj
+
           local manifest_json
           manifest_json="$("$yj" -tj < "$changed_file")"
 
@@ -385,8 +386,8 @@ check_repository() {
 setup_environment() {
   mkdir -p "$tmp"
   export PATH="$tmp:$PATH"
-  mkdir -p "$cargo_root_dir"
-  export PATH="$cargo_root_dir/bin:$PATH"
+  mkdir -p "$tmp_cargo_root"
+  export PATH="$tmp_cargo_root/bin:$PATH"
 }
 
 setup_repository() {
@@ -465,6 +466,7 @@ main() {
           local manifest_path="$root/$current/Cargo.toml"
           if [ -e "$manifest_path" ]; then
             setup_yj
+
             local manifest_json
             manifest_json="$("$yj" -tj < "$manifest_path")"
 
