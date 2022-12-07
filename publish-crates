@@ -232,6 +232,38 @@ load_workspace_crates() {
   fi
 }
 
+load_publishable_workspace_crates() {
+  if [ "${publishable_workspace_crates:-}" ]; then
+    return
+  fi
+  readarray -t publishable_workspace_crates < <(
+    cargo metadata --quiet --format-version=1 --manifest-path "$root/Cargo.toml" |
+    jq -r '
+      . as $in |
+      paths | select(
+        (. | length == 3) and # .package, [N], .source
+        .[0]=="packages" and
+        .[2]=="source" and
+        . as $path | $in | getpath($path)==null # .source == null for workspace crates
+      ) as $crate_path |
+      del($crate_path[-1]) as $crate_path |
+      $in |
+      if
+        getpath($crate_path + ["publish"]) == null or
+        getpath($crate_path + ["publish"]) == true
+      then
+        [getpath($crate_path + ["name"])]
+      else
+        []
+      end
+      | .[]
+    '
+  )
+  if [ ${#publishable_workspace_crates[*]} -lt 1 ]; then
+    die "No publishable workspace crates detected for the workspace of $root"
+  fi
+}
+
 setup_yj() {
   if [ -e "$yj" ]; then
     return
@@ -356,8 +388,8 @@ check_repository() {
     )
     set -x
   else
-    load_workspace_crates
-    selected_crates=("${workspace_crates[@]}")
+    load_publishable_workspace_crates
+    selected_crates=("${publishable_workspace_crates[@]}")
   fi
 
   local exit_code
