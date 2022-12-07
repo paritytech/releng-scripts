@@ -61,7 +61,7 @@ on_exit() {
 trap on_exit EXIT
 
 cargo generate \
-  --path "$project_root/template/crates/$type" \
+  --path "$project_root/templates/crate/$type" \
   --vcs none \
   --destination "$tmp" \
   --define "name=$name" \
