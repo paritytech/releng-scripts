@@ -12,6 +12,7 @@ repository_url="$CRATE_REPOSITORY_URL"
 license="$CRATE_LICENSE"
 type="$CRATE_TYPE"
 token="$CRATESIO_TOKEN"
+version="0.0.0"
 
 this_file="$(realpath -s "${BASH_SOURCE[0]}")"
 this_dir="${this_file%/*}"
@@ -35,6 +36,7 @@ cargo generate \
   --define "description=$description" \
   --define "repository_url=$repository_url" \
   --define "license=$license" \
+  --define "version=$version" \
   --name "$name"
 
 >/dev/null pushd "$tmp/$name"
@@ -43,4 +45,4 @@ find -D exec . -type f -print -exec cat {} \;
 
 cargo publish --token "$token" --allow-dirty
 
-cargo yank --token "$token" --version 0.0.0
+cargo yank --token "$token" --version "$version"
