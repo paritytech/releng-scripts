@@ -14,6 +14,38 @@ type="$CRATE_TYPE"
 token="$CRATESIO_TOKEN"
 version="0.0.0"
 
+while true; do
+  case "${1:-}" in
+    --check-if-exists)
+      check_if_exists=true
+    ;;
+    "")
+      break
+    ;;
+    *)
+      >&2 echo "Unexpected argument $1"
+      exit 1
+    ;;
+  esac
+done
+
+if [ "${check_if_exists:-}" ]; then
+  cratesio_url="https://crates.io/api/v1/crates/$name"
+  curl -sSLf "$cratesio_url"
+  case $? in
+    22) # 404, crate doesn't exist; it's free and can be reserved
+    ;;
+    0)
+      >&2 echo "Crate already exists: $1"
+      exit 1
+    ;;
+    *)
+      echo "Unexpected request status code: $?"
+      exit 1
+    ;;
+  esac
+fi
+
 this_file="$(realpath -s "${BASH_SOURCE[0]}")"
 this_dir="${this_file%/*}"
 project_root="${this_dir%/*}"

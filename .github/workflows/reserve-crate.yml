@@ -55,4 +55,4 @@ jobs:
           CRATE_TYPE: ${{ inputs.type }}
           CRATESIO_TOKEN: ${{ secrets.CRATE_OWNER_CRATESIO_TOKEN }}
           CRATE_AUTHOR: "Parity Technologies <admin@parity.io>"
-        run: ./tasks/reserve-crate.sh
+        run: ./tasks/reserve-crate.sh --check-if-exists
