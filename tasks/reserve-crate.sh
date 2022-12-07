@@ -12,25 +12,10 @@ repository_url="$CRATE_REPOSITORY_URL"
 license="$CRATE_LICENSE"
 type="$CRATE_TYPE"
 token="$CRATESIO_TOKEN"
+check_if_crate_exists="${CHECK_IF_CRATE_EXISTS:-}"
 version="0.0.0"
 
-while true; do
-  case "${1:-}" in
-    --check-if-exists)
-      check_if_exists=true
-      shift
-    ;;
-    "")
-      break
-    ;;
-    *)
-      >&2 echo "Unexpected argument $1"
-      exit 1
-    ;;
-  esac
-done
-
-if [ "${check_if_exists:-}" ]; then
+if [ "$check_if_crate_exists" ]; then
   cratesio_url="https://crates.io/api/v1/crates/$name"
   curl -sSLf "$cratesio_url"
   case $? in
