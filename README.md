@@ -26,8 +26,9 @@ This repository contains scripts managed and used by
 
 1. Go to https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml
 2. Click the "Run workflow" button to access the workflow's form
-3. Fill and send the workflow's form. Doing this will create a workflow run (you
-   might need to refresh the page in order to see it).
+3. Fill and send the workflow's form. After that a workflow run
+  ([example](https://github.com/paritytech/releng-scripts/actions/runs/3642900863/attempts/1))
+  will be created; you might need to refresh the page in order to see it.
 4. Wait for the workflow run to finish
 
 # Tools <a name="tools"></a>
