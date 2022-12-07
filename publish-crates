@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
 ## A script for publishing workspace crates to a target crates.io instance.
-## This script requires:
-## - A working PostgreSQL v13 database
-## - Some environment variables to be set up in advance (see how the check-publish-crates job is set
-##   up on CI for reference)
+## You'll need to set up some environment variables in advance (see `main`).
 
 echo "
 publish-crates
