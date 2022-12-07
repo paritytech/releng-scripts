@@ -19,7 +19,7 @@ if [ "$check_if_crate_exists" ]; then
   cratesio_url="https://crates.io/api/v1/crates/$name"
   curl -sSLf "$cratesio_url"
   case $? in
-    22) # 404, crate doesn't exist; it's free and can be reserved
+    22) # "not found" exit code; means that the crate doesn't exist and can be reserved
     ;;
     0)
       >&2 echo "Crate already exists: $1"
