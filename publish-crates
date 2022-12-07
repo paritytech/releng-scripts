@@ -136,8 +136,9 @@ setup_local_cratesio() {
 
           # Clear the registry's cache after a crate is committed to the remote
           # registry in order to force its redownload
-          find "$CARGO_HOME" \
+          find "${CARGO_HOME:-$HOME/.cargo}" \
             -type d -path "**/$crate_and_version" \
+            -print \
             -prune \
             -exec rm -rf {} \;
 
