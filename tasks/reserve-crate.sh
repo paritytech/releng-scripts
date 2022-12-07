@@ -18,6 +18,7 @@ while true; do
   case "${1:-}" in
     --check-if-exists)
       check_if_exists=true
+      shift
     ;;
     "")
       break
