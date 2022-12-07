@@ -1,0 +1,58 @@
+name: Reserve crate
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: The crates's name
+        required: true
+      description:
+        description: The crates's description
+        required: true
+      repository_url:
+        description: The URL to the crate's repository
+        required: true
+      license:
+        description: The crate's license
+        default: "Apache-2.0"
+        required: true
+      type:
+        description: The crate's type
+        type: choice
+        required: true
+        options:
+        - lib
+        - bin
+
+jobs:
+  reserve-crate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@55c7845fad90d0ae8b2e83715cb900e5e861e8cb # stable branch
+        with:
+          toolchain: stable
+
+      # Put this AFTER installing Rust because the cache uses the current rustc
+      # version as its cache key
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@359a70e43a0bb8a13953b04a90f76428b4959bb6 # v2.2.0
+        with:
+          cache-on-failure: "true"
+
+      - name: Install cargo-generate
+        run: cargo install cargo-generate --version 0.17.0
+
+      - name: Reserve the crate
+        env:
+          CRATE_NAME: ${{ inputs.name }}
+          CRATE_DESCRIPTION: ${{ inputs.type }}
+          CRATE_REPOSITORY_URL: ${{ inputs.repository_url }}
+          CRATE_LICENSE: ${{ inputs.license }}
+          CRATE_TYPE: ${{ inputs.type }}
+          CRATESIO_TOKEN: ${{ secrets.CRATE_OWNER_CRATESIO_TOKEN }}
+          CRATE_AUTHOR: "Parity Technologies <admin@parity.io>"
+        run: ./tasks/reserve-crate.sh
