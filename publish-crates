@@ -388,7 +388,10 @@ setup_environment() {
 }
 
 setup_repository() {
-  echo "/.tmp"$'\n'"/$(basename "$(dirname "${BASH_SOURCE[0]}")")" > "$tmp/.gitignore"
+  local this_file="${BASH_SOURCE[0]}"
+  local this_file_dir="${this_file%/*}"
+  local this_file_dirname="${this_file_dir##*/}"
+  echo "/.tmp"$'\n'"/$this_file_dirname" > "$tmp/.gitignore"
   git config core.excludesFile "$tmp/.gitignore"
 }
 
