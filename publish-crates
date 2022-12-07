@@ -130,8 +130,18 @@ setup_local_cratesio() {
       # example line: Commit and push finished for "Updating crate `foo#0.1.0`"
       "$crate_committed_msg_prefix"*)
         line_remainder="${line:${#crate_committed_msg_prefix}}"
-        if [[ "$line_remainder" =~ ^([^#]+)# ]]; then
-          echo "${BASH_REMATCH[1]}" >> "$SPUB_CRATES_COMMITTED_FILE"
+        if [[ "$line_remainder" =~ ^([^#]+)#([[:digit:].]+) ]]; then
+          crate_and_version="${BASH_REMATCH[0]}"
+          crate="${BASH_REMATCH[1]}"
+
+          # Clear the registry's cache after a crate is committed to the remote
+          # registry in order to force its redownload
+          find "$CARGO_HOME" \
+            -type d -path "**/$crate_and_version" \
+            -prune \
+            -exec rm -rf {} \;
+
+          echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
         else
           die all "background-worker line had unexpected format: $line"
         fi
