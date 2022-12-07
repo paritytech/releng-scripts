@@ -245,8 +245,8 @@ load_publishable_workspace_crates() {
         .[0]=="packages" and
         .[2]=="source" and
         . as $path | $in | getpath($path)==null # .source == null for workspace crates
-      ) as $crate_path |
-      del($crate_path[-1]) as $crate_path |
+      ) as $crate_source_path |
+      del($crate_source_path[-1]) as $crate_path |
       $in |
       if
         getpath($crate_path + ["publish"]) == null or
