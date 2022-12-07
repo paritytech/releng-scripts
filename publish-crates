@@ -393,7 +393,7 @@ check_repository() {
     selected_crates=("${publishable_workspace_crates[@]}")
   fi
 
-  local exit_code
+  local failed_crates=()
 
   for crate in "${selected_crates[@]}"; do
     if ! check_cratesio_crate \
@@ -401,12 +401,13 @@ check_repository() {
       "$cratesio_api" \
       "$cratesio_crates_owner"
     then
-      exit_code=1
+      failed_crates+=("$crate")
     fi
   done
 
-  if [ "${exit_code:-}" ]; then
-    exit "$exit_code"
+  if [ ${#failed_crates[*]} -gt 0 ]; then
+    >&2 echo "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
+    exit 1
   fi
 }
 
