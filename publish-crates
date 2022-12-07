@@ -339,12 +339,13 @@ check_repository() {
   local cratesio_crates_owner="$2"
   local gh_api="$3"
   local this_branch="$4"
+  local is_pr_branch="$5"
 
   local selected_crates=()
 
   # if the branch belongs to a pull request, then check only the changed files
   # otherwise, assume to be running on master and take all crates into account
-  if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+  if [ "$is_pr_branch" ]; then
     local pr_number="$this_branch"
 
     changed_pr_files=()
@@ -448,6 +449,11 @@ main() {
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
 
+  local is_pr_branch
+  if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+    is_pr_branch=true
+  fi
+
   setup_environment
 
   if [[ $- =~ x ]]; then
@@ -465,9 +471,14 @@ main() {
     "$cratesio_api" \
     "$cratesio_crates_owner" \
     "$gh_api" \
-    "$this_branch"
+    "$this_branch" \
+    "${is_pr_branch:-}"
 
-  local subpub_args=(publish --post-check --root "$PWD")
+  local subpub_args=(publish --root "$PWD")
+
+  if ! [ "${is_pr_branch:-}" ]; then
+    subpub_args+=(--post-check)
+  fi
 
   local crates_to_publish=()
 
@@ -538,7 +549,7 @@ main() {
         log "No crate changes were detected for this PR"
         exit
       fi
-    elif [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+    elif [ "${is_pr_branch:-}" ]; then
       log "No file changes were detected for this PR"
       exit
     fi
