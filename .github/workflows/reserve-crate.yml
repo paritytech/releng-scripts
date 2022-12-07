@@ -49,7 +49,7 @@ jobs:
       - name: Reserve the crate
         env:
           CRATE_NAME: ${{ inputs.name }}
-          CRATE_DESCRIPTION: ${{ inputs.type }}
+          CRATE_DESCRIPTION: ${{ inputs.description }}
           CRATE_REPOSITORY_URL: ${{ inputs.repository_url }}
           CRATE_LICENSE: ${{ inputs.license }}
           CRATE_TYPE: ${{ inputs.type }}
