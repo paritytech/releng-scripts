@@ -172,9 +172,10 @@ setup_local_cratesio() {
 }
 
 setup_subpub() {
+  local branch="$1"
   cargo install --quiet \
     --git https://github.com/paritytech/subpub \
-    --branch releng \
+    --branch "$branch" \
     --root "$tmp_cargo_root"
   subpub --version
 }
@@ -446,6 +447,8 @@ main() {
   local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
   # shellcheck disable=SC2153 # lowercase counterpart
   local spub_exclude="${SPUB_EXCLUDE:-}"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local spub_branch="${SPUB_BRANCH:-releng}"
 
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
@@ -610,7 +613,7 @@ main() {
     mkdir -p "$SPUB_TMP"
   fi
 
-  setup_subpub
+  setup_subpub "$spub_branch"
   subpub "${subpub_args[@]}" || log "::SUBPUB FAILED"
 }
 
