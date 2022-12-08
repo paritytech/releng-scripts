@@ -611,7 +611,7 @@ main() {
   fi
 
   setup_subpub
-  subpub "${subpub_args[@]}" || :
+  subpub "${subpub_args[@]}" || log "::SUBPUB FAILED"
 }
 
 main "$@"
