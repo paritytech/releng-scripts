@@ -449,6 +449,8 @@ main() {
   local spub_exclude="${SPUB_EXCLUDE:-}"
   # shellcheck disable=SC2153 # lowercase counterpart
   local spub_branch="${SPUB_BRANCH:-releng}"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
 
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
@@ -498,7 +500,9 @@ main() {
   done < <(echo "$spub_publish")
 
   if [ ${#crates_to_publish[*]} -eq 0 ]; then
-    if [ "${changed_pr_files:-}" ]; then
+    if [ "$spub_publish_all" ]; then
+      :
+    elif [ "${changed_pr_files:-}" ]; then
       for file in "${changed_pr_files[@]}"; do
         local current="$file"
         while true; do
