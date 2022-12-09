@@ -73,17 +73,6 @@ setup_local_cratesio() {
 
   git clone --branch releng https://github.com/paritytech/crates.io "$cratesio_repo"
 
-  local cargo_home="${CARGO_HOME:-$HOME/.cargo}"
-
-  # clear the local registry's cache before going forward since the local
-  # registry will be recreated for this job
-  if [ -e "$cargo_home/registry" ]; then
-    find "$cargo_home"/registry -maxdepth 2 -type d -name "-*" -prune -exec rm -rf {} \;
-  fi
-  if [ -e "$cargo_home/git" ]; then
-    find "$cargo_home"/git -maxdepth 2 -type d -name "-*" -prune -exec rm -rf {} \;
-  fi
-
   >/dev/null pushd "$cratesio_repo"
 
   mkdir local_uploads tmp
@@ -144,6 +133,7 @@ setup_local_cratesio() {
 
           # Clear the registry's cache after a crate is committed to the remote
           # registry in order to force its redownload
+          cargo_home="${CARGO_HOME:-$HOME/.cargo}"
           find "$cargo_home" \
             -type d -path "**/$crate-$crate_version" \
             -print \
