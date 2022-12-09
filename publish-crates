@@ -137,7 +137,7 @@ setup_local_cratesio() {
           crate_version="${BASH_REMATCH[2]}"
 
           # Clear the registry's cache after a crate is committed to the remote
-          # registry in order to force its redownload
+          # registry to force its redownload
           cargo_home="${CARGO_HOME:-$HOME/.cargo}"
           find "$cargo_home" \
             -type d -path "**/$crate-$crate_version" \
@@ -148,6 +148,8 @@ setup_local_cratesio() {
             -type f -path "**/$crate-$crate_version.crate" \
             -print \
             -exec rm -f {} \;
+
+          # Clear the build cache to force the crate to be recompiled
           cargo clean -vv --manifest-path "$root/Cargo.toml" -p "$crate" \
             || die all "Failed to clear build cache for crate $crate"
 
