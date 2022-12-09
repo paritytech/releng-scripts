@@ -148,7 +148,8 @@ setup_local_cratesio() {
             -type f -path "**/$crate-$crate_version.crate" \
             -print \
             -exec rm -f {} \;
-          cargo clean -vv --manifest-path "$root/Cargo.toml" -p "$crate"
+          cargo clean -vv --manifest-path "$root/Cargo.toml" -p "$crate" \
+            || die all "Failed to clear build cache for crate $crate"
 
           echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
         else
