@@ -624,7 +624,7 @@ main() {
   fi
 
   setup_subpub "$spub_branch"
-  subpub "${subpub_args[@]}" || log "::SUBPUB FAILED"
+  subpub "${subpub_args[@]}"
 }
 
 main "$@"
