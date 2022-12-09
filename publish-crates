@@ -86,6 +86,10 @@ setup_local_cratesio() {
   local pipe="$tmp/pipe"
   mkfifo "$pipe"
 
+  # CARGO_REGISTRIES_LOCAL_INDEX needs to be exported before the
+  # background-worker is launched since `cargo clean` relies on this variable
+  export CARGO_REGISTRIES_LOCAL_INDEX=file://"$cratesio_repo"/tmp/index-bare
+
   export GIT_REPO_URL="file://$PWD/tmp/index-bare"
   export GH_CLIENT_ID=
   export GH_CLIENT_SECRET=
@@ -94,6 +98,7 @@ setup_local_cratesio() {
   export CRATESIO_TOKEN_PREFIX="$cratesio_token_prefix"
   export WEB_NEW_PKG_RATE_LIMIT_BURST=10248
   export CRATESIO_LOCAL_CRATES="${workspace_crates[*]}"
+
   cargo run --quiet --bin server | while IFS= read -r line; do
     case "$line" in
       "$cratesio_token_prefix="*)
@@ -168,7 +173,6 @@ setup_local_cratesio() {
 
   export SPUB_REGISTRY=local
   export SPUB_CRATES_API=http://localhost:8888/api/v1
-  export CARGO_REGISTRIES_LOCAL_INDEX=file://"$cratesio_repo"/tmp/index-bare
   export SPUB_REGISTRY_TOKEN="$token"
 }
 
