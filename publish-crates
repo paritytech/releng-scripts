@@ -143,6 +143,7 @@ setup_local_cratesio() {
             -type f -path "**/$crate-$crate_version.crate" \
             -print \
             -exec rm -f {} \;
+          cargo clean -vv --manifest-path "$root/Cargo.toml" -p "$crate"
 
           echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
         else
