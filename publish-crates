@@ -462,6 +462,7 @@ main() {
 
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
+  local initial_commit_sha="$CI_COMMIT_SHA"
 
   local is_pr_branch
   if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
@@ -571,10 +572,11 @@ main() {
     fi
   fi
 
+  git config --global user.name "CI"
+  git config --global user.email "<>"
+
   case "$cratesio_target_instance" in
     local)
-      git config --global user.name "CI"
-      git config --global user.email "<>"
       apt update -qq
       setup_postgres
       # diesel setup should be after setup_progress because it depends on libpq
@@ -626,7 +628,13 @@ main() {
   fi
 
   setup_subpub "$spub_branch"
-  subpub "${subpub_args[@]}"
+
+  local exit_code=0
+  subpub "${subpub_args[@]}" || exit_code=$?
+
+  git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff" || :
+
+  exit "$exit_code"
 }
 
 main "$@"
