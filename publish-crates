@@ -150,7 +150,9 @@ setup_local_cratesio() {
             -exec rm -f {} \;
 
           # Clear the build cache to force the crate to be recompiled
-          cargo clean -vv --manifest-path "$root/Cargo.toml" -p "$crate" \
+          cargo clean --quiet \
+            --manifest-path "$root/Cargo.toml" \
+            -p "$crate" \
             || die all "Failed to clear build cache for crate $crate"
 
           echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
