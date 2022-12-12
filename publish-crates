@@ -575,6 +575,8 @@ main() {
   git config --global user.name "CI"
   git config --global user.email "<>"
 
+  local produce_git_diff
+
   case "$cratesio_target_instance" in
     local)
       apt update -qq
@@ -586,6 +588,7 @@ main() {
     default)
       # TODO: enable it after local instance publishing works for a while on CI
       echo "Publishing to crates.io is temporarily disabled"; exit 0
+      produce_git_diff=true
       export SPUB_CRATES_API=http://crates.io/api/v1
     ;;
     *)
@@ -632,7 +635,9 @@ main() {
   local exit_code=0
   subpub "${subpub_args[@]}" || exit_code=$?
 
-  git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff" || :
+  if [ "${produce_git_diff:-}" ]; then
+    git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff" || :
+  fi
 
   exit "$exit_code"
 }
