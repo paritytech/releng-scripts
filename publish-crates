@@ -471,6 +471,9 @@ main() {
     is_pr_branch=true
   fi
 
+  git config --global user.name "CI"
+  git config --global user.email "<>"
+
   setup_environment
 
   if [[ $- =~ x ]]; then
@@ -574,9 +577,6 @@ main() {
     fi
   fi
 
-  git config --global user.name "CI"
-  git config --global user.email "<>"
-
   local produce_git_diff
 
   case "$cratesio_target_instance" in
@@ -637,7 +637,7 @@ main() {
   local exit_code=0
   subpub "${subpub_args[@]}" || exit_code=$?
 
-  if [ "${produce_git_diff:-}" ]; then
+  if [ "${SPUB_TMP:-}" ] && [ "${produce_git_diff:-}" ]; then
     git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff" || :
   fi
 
