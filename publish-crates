@@ -609,6 +609,10 @@ main() {
     ;;
   esac
 
+  if [ "${should_submit_pr:-}" ]; then
+    subpub_args+=(--for-pull-request)
+  fi
+
   for crate_to_publish in "${crates_to_publish[@]}"; do
     subpub_args+=(--publish-only "$crate_to_publish")
   done
