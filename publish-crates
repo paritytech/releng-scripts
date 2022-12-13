@@ -465,7 +465,10 @@ main() {
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
   local initial_commit_sha="$CI_COMMIT_SHA"
-  local was_triggered_manually="${CI_JOB_MANUAL:-}"
+  local was_triggered_manually
+  if [ "${CI_JOB_MANUAL:-}" == true ]; then
+    was_triggered_manually=true
+  fi
 
   local is_pr_branch
   if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
