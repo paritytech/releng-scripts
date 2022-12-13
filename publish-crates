@@ -419,7 +419,7 @@ check_repository() {
   done
 
   if [ ${#failed_crates[*]} -gt 0 ]; then
-    >&2 echo "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
+    >&2 log "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
     exit 1
   fi
 }
