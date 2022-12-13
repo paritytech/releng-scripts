@@ -704,7 +704,6 @@ main() {
     fi
   fi
 
-
   exit "$exit_code"
 }
 
