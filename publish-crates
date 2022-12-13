@@ -583,7 +583,7 @@ main() {
     fi
   fi
 
-  local submit_pr_base
+  local should_submit_pr
 
   case "$cratesio_target_instance" in
     local)
@@ -601,7 +601,7 @@ main() {
       if [ ! "$github_token" ]; then
         die "\$github_token is required"
       fi
-      submit_pr_base="$this_branch"
+      should_submit_pr=true
       export SPUB_CRATES_API=http://crates.io/api/v1
     ;;
     *)
@@ -645,9 +645,11 @@ main() {
 
   setup_subpub "$spub_branch"
 
-  subpub "${subpub_args[@]}"
+  local subpub_exit_code=0
+  subpub "${subpub_args[@]}" || subpub_exit_code=$?
 
-  if [ "${submit_pr_base:-}" ]; then
+  local has_diff
+  if [ ! "${is_pr_branch:-}" ]; then
     local has_diff
     if [ "${SPUB_TMP:-}" ]; then
       git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff"
@@ -657,55 +659,57 @@ main() {
     elif [ "$(git diff "$initial_commit_sha" | wc -c)" -gt 0 ]; then
       has_diff=true
     fi
+  fi
 
-    if [ "${has_diff:-}" ]; then
-      git reset "$initial_commit_sha"
-      git add .
-      git commit -m "update dependencies after publish"
+  if [ "${should_submit_pr:-}" ] && [ "${has_diff:-}" ] && [ "$subpub_exit_code" -eq 0 ]; then
+    git reset "$initial_commit_sha"
+    git add .
+    git commit -m "update dependencies after publish"
 
-      local target_branch="publish-crates/update"
-      local target_remote="https://token:${github_token}@github.com/repos/$repo_owner/$repo.git"
-      if git remote get-url target >/dev/null; then
-        git remote set-url target "$target_remote"
-      else
-        git remote add target "$target_remote"
-      fi
-      git push --force target HEAD:"$target_branch"
-      git remote remove target
+    local target_branch="publish-crates/update"
+    local target_remote="https://token:$github_token@github.com/repos/$repo_owner/$repo.git"
+    if git remote get-url target >/dev/null; then
+      git remote set-url target "$target_remote"
+    else
+      git remote add target "$target_remote"
+    fi
+    git push --force target HEAD:"$target_branch"
+    git remote remove target
 
-      local target_branch_filter
-      target_branch_filter="$(echo -n "$repo_owner:$target_branch" | jq -sRr @uri)"
-      local open_pr_count
-      open_pr_count="$(curl -sSLf \
-        -H "Authorization: token $github_token" \
-        "$gh_api/repos/$repo_owner/$repo/pulls?state=open&head=$target_branch_filter" |
-        jq -e -r '. | length'
+    local target_branch_filter
+    target_branch_filter="$(echo -n "$repo_owner:$target_branch" | jq -sRr @uri)"
+    local open_pr_count
+    open_pr_count="$(curl -sSLf \
+      -H "Authorization: token $github_token" \
+      "$gh_api/repos/$repo_owner/$repo/pulls?state=open&head=$target_branch_filter" |
+      jq -e -r '. | length'
+    )"
+
+    if [ "$open_pr_count" -eq 0 ]; then
+      local title="Update dependencies after publish"
+      local body="# :exclamation: This PR is generated automatically by CI. DO NOT push commits to this PR!"
+      local payload
+      payload="$(jq -n \
+        --arg title "$title" \
+        --arg body "$body" \
+        --arg base "$this_branch" \
+        --arg head "$target_branch" \
+        '{
+            title: $title,
+            body: $body,
+            head: $head,
+            base: $base
+        }'
       )"
-
-      if [ "$open_pr_count" -eq 0 ]; then
-        local title="Update dependencies after publish"
-        local body="# :exclamation: This PR is generated automatically by CI. DO NOT push commits to this PR!"
-        local payload
-        payload="$(jq -n \
-          --arg title "$title" \
-          --arg body "$body" \
-          --arg base "$submit_pr_base" \
-          --arg head "$target_branch" \
-          '{
-              title: $title,
-              body: $body,
-              head: $head,
-              base: $base
-          }'
-        )"
-        curl -sSLf \
-          -H "Authorization: token $github_token" \
-          -X POST \
-          -d "$payload" \
-          "$gh_api/$repo_owner/$repo/pulls"
-      fi
+      curl -sSLf \
+        -H "Authorization: token $github_token" \
+        -X POST \
+        -d "$payload" \
+        "$gh_api/$repo_owner/$repo/pulls"
     fi
   fi
+
+  exit "$subpub_exit_code"
 }
 
 main "$@"
