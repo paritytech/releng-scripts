@@ -350,7 +350,9 @@ check_repository() {
   local cratesio_crates_owner="$2"
   local gh_api="$3"
   local this_branch="$4"
-  local is_pr_branch="$5"
+  local repo_owner="$5"
+  local repo="$6"
+  local is_pr_branch="$7"
 
   local selected_crates=()
 
@@ -395,7 +397,7 @@ check_repository() {
       curl -sSLf \
         -H "Accept: application/vnd.github.v3.diff" \
         -H "Authorization: token $GITHUB_PR_TOKEN" \
-        "$gh_api/repos/$REPO_OWNER/$REPO/pulls/$pr_number" \
+        "$gh_api/repos/$repo_owner/$repo/pulls/$pr_number" \
       || die all "Failed to get diff for PR $pr_number"
     )
     set -x
@@ -448,23 +450,22 @@ main() {
   # shellcheck disable=SC2153 # lowercase counterpart
   local cratesio_api="$CRATESIO_API"
   # shellcheck disable=SC2153 # lowercase counterpart
+  local repo_owner="$REPO_OWNER"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local repo="$REPO"
   local spub_start_from="${SPUB_START_FROM:-}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_publish="${SPUB_PUBLISH:-}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_verify_from="${SPUB_VERIFY_FROM:-}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_exclude="${SPUB_EXCLUDE:-}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_branch="${SPUB_BRANCH:-releng}"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
+  local github_token="${GITHUB_TOKEN:-}"
 
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
   local initial_commit_sha="$CI_COMMIT_SHA"
+  local was_triggered_manually="${CI_JOB_MANUAL:-}"
 
   local is_pr_branch
   if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
@@ -492,6 +493,8 @@ main() {
     "$cratesio_crates_owner" \
     "$gh_api" \
     "$this_branch" \
+    "$repo_owner" \
+    "$repo" \
     "${is_pr_branch:-}"
 
   local subpub_args=(publish --root "$PWD")
@@ -577,7 +580,7 @@ main() {
     fi
   fi
 
-  local produce_git_diff
+  local submit_pr_base
 
   case "$cratesio_target_instance" in
     local)
@@ -588,9 +591,14 @@ main() {
       setup_local_cratesio
     ;;
     default)
-      # TODO: enable it after local instance publishing works for a while on CI
-      echo "Publishing to crates.io is temporarily disabled"; exit 0
-      produce_git_diff=true
+      if [ ! "${was_triggered_manually:-}" ]; then
+        # TODO: enable it after local instance publishing works for a while on CI
+        echo "Publishing to crates.io is temporarily disabled"; exit 0
+      fi
+      if [ ! "$github_token" ]; then
+        die "\$github_token is required"
+      fi
+      submit_pr_base="$this_branch"
       export SPUB_CRATES_API=http://crates.io/api/v1
     ;;
     *)
@@ -634,12 +642,68 @@ main() {
 
   setup_subpub "$spub_branch"
 
-  local exit_code=0
-  subpub "${subpub_args[@]}" || exit_code=$?
+  subpub "${subpub_args[@]}"
 
-  if [ "${SPUB_TMP:-}" ] && [ "${produce_git_diff:-}" ]; then
-    git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff" || :
+  if [ "${submit_pr_base:-}" ]; then
+    local has_diff
+    if [ "${SPUB_TMP:-}" ]; then
+      git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff"
+      if [ "$(wc -c < "$SPUB_TMP/after-publish.diff")" -gt 0 ]; then
+        has_diff=true
+      fi
+    elif [ "$(git diff "$initial_commit_sha" | wc -c)" -gt 0 ]; then
+      has_diff=true
+    fi
+
+    if [ "${has_diff:-}" ]; then
+      git reset "$initial_commit_sha"
+      git add .
+      git commit -m "update dependencies after publish"
+
+      local target_branch="publish-crates/update"
+      local target_remote="https://token:${github_token}@github.com/repos/$repo_owner/$repo.git"
+      if git remote get-url target >/dev/null; then
+        git remote set-url target "$target_remote"
+      else
+        git remote add target "$target_remote"
+      fi
+      git push --force target HEAD:"$target_branch"
+      git remote remove target
+
+      local target_branch_filter
+      target_branch_filter="$(echo -n "$repo_owner:$target_branch" | jq -sRr @uri)"
+      local open_pr_count
+      open_pr_count="$(curl -sSLf \
+        -H "Authorization: token $github_token" \
+        "$gh_api/repos/$repo_owner/$repo/pulls?state=open&head=$target_branch_filter" |
+        jq -e -r '. | length'
+      )"
+
+      if [ "$open_pr_count" -eq 0 ]; then
+        local title="Update dependencies after publish"
+        local body="# :exclamation: This PR is generated automatically by CI. DO NOT push commits to this PR!"
+        local payload
+        payload="$(jq -n \
+          --arg title "$title" \
+          --arg body "$body" \
+          --arg base "$submit_pr_base" \
+          --arg head "$target_branch" \
+          '{
+              title: $title,
+              body: $body,
+              head: $head,
+              base: $base
+          }'
+        )"
+        curl -sSLf \
+          -H "Authorization: token $github_token" \
+          -X POST \
+          -d "$payload" \
+          "$gh_api/$repo_owner/$repo/pulls"
+      fi
+    fi
   fi
+
 
   exit "$exit_code"
 }
