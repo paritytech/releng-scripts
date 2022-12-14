@@ -593,7 +593,7 @@ main() {
     default)
       if [ ! "${was_triggered_manually:-}" ]; then
         # TODO: enable it after local instance publishing works for a while on CI
-        echo "Publishing to crates.io is temporarily disabled"; exit 0
+        log "Publishing to crates.io is temporarily disabled"; exit 0
       fi
 
       if [ ! "$github_token" ]; then
