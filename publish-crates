@@ -461,6 +461,7 @@ main() {
   local spub_branch="${SPUB_BRANCH:-releng}"
   local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
   local github_token="${GITHUB_TOKEN:-}"
+  local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
 
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
@@ -598,9 +599,17 @@ main() {
         # TODO: enable it after local instance publishing works for a while on CI
         echo "Publishing to crates.io is temporarily disabled"; exit 0
       fi
+
       if [ ! "$github_token" ]; then
-        die "\$github_token is required"
+        die "\$github_token is empty"
       fi
+
+      if [ "$cratesio_token" ]; then
+        export CARGO_REGISTRY_TOKEN="$cratesio_token"
+      else
+        die "\$cratesio_token is empty"
+      fi
+
       should_submit_pr=true
       export SPUB_CRATES_API=http://crates.io/api/v1
     ;;
