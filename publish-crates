@@ -352,7 +352,7 @@ check_repository() {
   local this_branch="$4"
   local repo_owner="$5"
   local repo="$6"
-  local has_crate_compliance_check="$7"
+  local check_for_crate_compliance="$7"
   local is_pr_branch="$8"
 
   local selected_crates=()
@@ -407,7 +407,7 @@ check_repository() {
     selected_crates=("${publishable_workspace_crates[@]}")
   fi
 
-  if [ "$has_crate_compliance_check" ]; then
+  if [ "$check_for_crate_compliance" ]; then
     local failed_crates=()
 
     for crate in "${selected_crates[@]}"; do
@@ -491,10 +491,10 @@ main() {
 
   setup_repository
 
-  local has_crate_compliance_check
+  local check_for_crate_compliance
   case "$cratesio_target_instance" in
     local)
-      has_crate_compliance_check=true
+      check_for_crate_compliance=true
     ;;
     default) ;;
     *)
@@ -509,7 +509,7 @@ main() {
     "$this_branch" \
     "$repo_owner" \
     "$repo" \
-    "${has_crate_compliance_check:-}" \
+    "${check_for_crate_compliance:-}" \
     "${is_pr_branch:-}"
 
   local subpub_args=(publish --root "$PWD")
