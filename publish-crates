@@ -352,7 +352,8 @@ check_repository() {
   local this_branch="$4"
   local repo_owner="$5"
   local repo="$6"
-  local is_pr_branch="$7"
+  local has_crate_compliance_check="$7"
+  local is_pr_branch="$8"
 
   local selected_crates=()
 
@@ -406,21 +407,23 @@ check_repository() {
     selected_crates=("${publishable_workspace_crates[@]}")
   fi
 
-  local failed_crates=()
+  if [ "$has_crate_compliance_check" ]; then
+    local failed_crates=()
 
-  for crate in "${selected_crates[@]}"; do
-    if ! check_cratesio_crate \
-      "$crate" \
-      "$cratesio_api" \
-      "$cratesio_crates_owner"
-    then
-      failed_crates+=("$crate")
+    for crate in "${selected_crates[@]}"; do
+      if ! check_cratesio_crate \
+        "$crate" \
+        "$cratesio_api" \
+        "$cratesio_crates_owner"
+      then
+        failed_crates+=("$crate")
+      fi
+    done
+
+    if [ ${#failed_crates[*]} -gt 0 ]; then
+      >&2 log "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
+      exit 1
     fi
-  done
-
-  if [ ${#failed_crates[*]} -gt 0 ]; then
-    >&2 log "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
-    exit 1
   fi
 }
 
@@ -488,6 +491,17 @@ main() {
 
   setup_repository
 
+  local has_crate_compliance_check
+  case "$cratesio_target_instance" in
+    local)
+      has_crate_compliance_check=true
+    ;;
+    default) ;;
+    *)
+      die "Invalid target: $cratesio_target_instance"
+    ;;
+  esac
+
   check_repository \
     "$cratesio_api" \
     "$cratesio_crates_owner" \
@@ -495,6 +509,7 @@ main() {
     "$this_branch" \
     "$repo_owner" \
     "$repo" \
+    "${has_crate_compliance_check:-}" \
     "${is_pr_branch:-}"
 
   local subpub_args=(publish --root "$PWD")
