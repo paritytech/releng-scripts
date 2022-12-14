@@ -424,13 +424,6 @@ check_repository() {
   fi
 }
 
-setup_environment() {
-  mkdir -p "$tmp"
-  export PATH="$tmp:$PATH"
-  mkdir -p "$tmp_cargo_root"
-  export PATH="$tmp_cargo_root/bin:$PATH"
-}
-
 setup_repository() {
   local this_file="${BASH_SOURCE[0]}"
   local this_file_dir="${this_file%/*}"
@@ -478,8 +471,11 @@ main() {
 
   git config --global user.name "CI"
   git config --global user.email "<>"
-
-  setup_environment
+  rm -rf "$tmp"
+  mkdir -p "$tmp"
+  export PATH="$tmp:$PATH"
+  mkdir -p "$tmp_cargo_root"
+  export PATH="$tmp_cargo_root/bin:$PATH"
 
   if [[ $- =~ x ]]; then
     # when -x is set up the logged messages will be printed during execution, so there's no need to
@@ -584,7 +580,7 @@ main() {
     fi
   fi
 
-  local should_submit_pr
+  local should_submit_pr use_clean_environment
 
   case "$cratesio_target_instance" in
     local)
@@ -610,8 +606,10 @@ main() {
         die "\$cratesio_token is empty"
       fi
 
-      should_submit_pr=true
       export SPUB_CRATES_API=http://crates.io/api/v1
+
+      should_submit_pr=true
+      use_clean_environment=true
     ;;
     *)
       die "Invalid target: $cratesio_target_instance"
@@ -657,6 +655,13 @@ main() {
   fi
 
   setup_subpub "$spub_branch"
+
+  if [ "${use_clean_environment:-}" ]; then
+    export CARGO_TARGET_DIR="$tmp/target"
+    mkdir -p "$CARGO_TARGET_DIR"
+    export CARGO_HOME="$tmp/cargo"
+    mkdir -p "$CARGO_HOME"
+  fi
 
   local subpub_exit_code=0
   subpub "${subpub_args[@]}" || subpub_exit_code=$?
