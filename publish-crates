@@ -683,6 +683,7 @@ main() {
     mkdir -p "$CARGO_TARGET_DIR"
     export CARGO_HOME="$tmp/cargo"
     mkdir -p "$CARGO_HOME"
+    subpub_args+=(--clear-cargo-home "$CARGO_HOME")
   fi
 
   local subpub_exit_code=0
