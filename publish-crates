@@ -691,7 +691,7 @@ main() {
 
     if [ "$open_pr_count" -eq 0 ]; then
       local title="Update dependencies after publish"
-      local body="# :exclamation: This PR is generated automatically by CI. DO NOT push commits to this PR!"
+      local body="# :exclamation: DO NOT push commits to this PR! This PR is generated automatically by CI"
       local payload
       payload="$(jq -n \
         --arg title "$title" \
