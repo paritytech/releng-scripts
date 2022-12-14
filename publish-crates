@@ -625,7 +625,10 @@ main() {
       fi
 
       export SPUB_CRATES_API=http://crates.io/api/v1
-      subpub_args+=(--index-url "https://raw.githubusercontent.com/rust-lang/crates.io-index")
+      subpub_args+=(
+        --index-api "$gh_api/rust-lang/crates.io-index"
+        --index-api-token "$github_token"
+      )
 
       should_submit_pr=true
       use_clean_environment=true
