@@ -627,7 +627,8 @@ main() {
       export SPUB_CRATES_API=http://crates.io/api/v1
       subpub_args+=(
         --index-api "$gh_api/rust-lang/crates.io-index"
-        --index-api-token "$github_token"
+        --index-api-auth-header "token $github_token"
+        --index-api-accept-header "application/vnd.github.v3.raw"
       )
 
       should_submit_pr=true
