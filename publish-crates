@@ -701,7 +701,10 @@ main() {
     local has_diff
     if [ "${SPUB_TMP:-}" ]; then
       git diff "$initial_commit_sha" > "$SPUB_TMP/after-publish.diff"
-      if [ "$(wc -c < "$SPUB_TMP/after-publish.diff")" -gt 0 ]; then
+      if
+        [ -e "$SPUB_TMP/after-publish.diff" ] &&
+        [ "$(wc -c < "$SPUB_TMP/after-publish.diff")" -gt 0 ]
+      then
         has_diff=true
       fi
     elif [ "$(git diff "$initial_commit_sha" | wc -c)" -gt 0 ]; then
