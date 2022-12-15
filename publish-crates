@@ -718,7 +718,7 @@ main() {
     git commit -m "update dependencies after publish"
 
     local target_branch="publish-crates/update"
-    local target_remote="https://token:$github_token@github.com/repos/$repo_owner/$repo.git"
+    local target_remote="https://token:$github_token@github.com/$repo_owner/$repo.git"
     if git remote get-url target >/dev/null; then
       git remote set-url target "$target_remote"
     else
