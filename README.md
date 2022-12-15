@@ -20,6 +20,8 @@
 This repository contains scripts managed and used by
 [release-engineering](https://github.com/orgs/paritytech/teams/release-engineering).
 
+See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tools) for information on the functionality provided through this repository.
+
 # Usage <a name="usage"></a>
 
 ## GitHub Actions <a name="usage-github-actions"></a>
