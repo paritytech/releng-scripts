@@ -609,10 +609,7 @@ main() {
       setup_local_cratesio
     ;;
     default)
-      if
-        [ ! "${was_triggered_manually:-}" ] &&
-        [ "$initial_commit_sha" != "2e21c35f879e904101d8305eef7a203d95dd6cd6" ]
-      then
+      if [ ! "${was_triggered_manually:-}" ]; then
         # TODO: enable it after local instance publishing works for a while on CI
         log "Publishing to crates.io is temporarily disabled"; exit 0
       fi
