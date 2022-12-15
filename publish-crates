@@ -690,8 +690,11 @@ main() {
     export CARGO_HOME="$tmp/cargo"
     mkdir -p "$CARGO_HOME"
     subpub_args+=(
-      # clearing $CARGO_HOME is useful to force cargo to redownload the
-      # crates.io index after crates are published
+      # Clearing $CARGO_HOME is needed to force cargo to redownload the
+      # crates.io index after crates are published.
+      # TODO: doing this introduces a lot of delay since the crates.io index has
+      # to be redownloaded after each crate is published. We should find a
+      # sensible workaround which isn't about nuking the registry cache.
       --clear-cargo-home "$CARGO_HOME"
     )
   fi
