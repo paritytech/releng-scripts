@@ -726,7 +726,7 @@ main() {
     git add .
     git commit -q -m "update dependencies after publish"
 
-    local target_branch="publish-crates/update"
+    local target_branch="ci-crates-publishing-update"
     git branch -m "$target_branch"
 
     local target_remote="https://token:$github_token@github.com/$repo_owner/$repo.git"
@@ -735,7 +735,7 @@ main() {
     else
       git remote add target "$target_remote"
     fi
-    git push --force target HEAD
+    git push --force target "$target_branch"
     git remote remove target
 
     local target_branch_filter
