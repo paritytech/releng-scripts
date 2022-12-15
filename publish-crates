@@ -517,10 +517,6 @@ main() {
 
   local subpub_args=(publish --root "$PWD")
 
-  if ! [ "${is_pr_branch:-}" ]; then
-    subpub_args+=(--post-check)
-  fi
-
   local crates_to_publish=()
 
   while IFS= read -r crate; do
@@ -602,6 +598,10 @@ main() {
 
   case "$cratesio_target_instance" in
     local)
+      if [ ! "${is_pr_branch:-}" ]; then
+        subpub_args+=(--post-check)
+      fi
+
       apt update -qq
       setup_postgres
       # diesel setup should be after setup_progress because it depends on libpq
