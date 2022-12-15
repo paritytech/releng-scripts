@@ -768,7 +768,7 @@ main() {
         -H "Authorization: token $github_token" \
         -X POST \
         -d "$payload" \
-        "$gh_api/$repo_owner/$repo/pulls"
+        "$gh_api/repos/$repo_owner/$repo/pulls"
     fi
   fi
 
