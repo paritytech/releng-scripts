@@ -619,6 +619,10 @@ main() {
       setup_local_cratesio
     ;;
     default)
+      if [ "${CI_JOB_MANUAL:-}" != true ]; then
+        log "Automatic publishing is temporarily disabled"; exit 0
+      fi
+
       if [ ! "$github_token" ]; then
         die "\$github_token is empty"
       fi
