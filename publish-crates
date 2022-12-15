@@ -437,7 +437,13 @@ setup_repository() {
   local this_file="${BASH_SOURCE[0]}"
   local this_file_dir="${this_file%/*}"
   local this_file_dirname="${this_file_dir##*/}"
-  echo "/.tmp"$'\n'"/$this_file_dirname" > "$tmp/.gitignore"
+
+  local ignores="/.tmp"$'\n'"/$this_file_dirname"
+  if [ "${SPUB_TMP:-}" ]; then
+    ignores+=$'\n'"$SPUB_TMP"
+  fi
+  echo "$ignores" > "$tmp/.gitignore"
+
   git config core.excludesFile "$tmp/.gitignore"
 }
 
