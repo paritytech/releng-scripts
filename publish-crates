@@ -703,6 +703,7 @@ main() {
     diff="$(git diff "$initial_commit_sha")"
 
     if [ "${SPUB_TMP:-}" ]; then
+      mkdir -p "$SPUB_TMP"
       echo "$diff" > "$SPUB_TMP/after-publish.diff"
     fi
 
