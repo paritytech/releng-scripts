@@ -1,11 +1,11 @@
 # TOC
 
 - [Introduction](#introduction)
+- [Reserving crates](#reserving-crates)
 - [Usage](#usage)
   - [GitHub Actions](#usage-github-actions)
   - [GitLab Jobs](#usage-gitlab-jobs)
   - [Locally](#usage-locally)
-- [Reserving crates](#reserving-crates)
 - [Development](#development)
   - [Repository structure](#development-repository-structure)
     - [External consumption](#development-repository-structure-external-consumption)
@@ -21,6 +21,15 @@ This repository contains scripts managed and used by
 [release-engineering](https://github.com/orgs/paritytech/teams/release-engineering).
 
 See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tools#TOC) for information on the functionality provided through this repository.
+
+# Reserving crates <a name="reserving-crates"></a>
+
+1. Go to https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml
+2. Click the "Run workflow" button to access the workflow's form
+3. Fill and send the workflow's form. After that a workflow run
+  ([example](https://github.com/paritytech/releng-scripts/actions/runs/3642900863/attempts/1))
+  will be created; you might need to refresh the page in order to see it.
+4. Wait for the workflow run to finish
 
 # Usage <a name="usage"></a>
 
@@ -50,15 +59,6 @@ job:
 ## Locally <a name="usage-locally"></a>
 
 Clone this repository and run the scripts
-
-# Reserving crates <a name="reserving-crates"></a>
-
-1. Go to https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml
-2. Click the "Run workflow" button to access the workflow's form
-3. Fill and send the workflow's form. After that a workflow run
-  ([example](https://github.com/paritytech/releng-scripts/actions/runs/3642900863/attempts/1))
-  will be created; you might need to refresh the page in order to see it.
-4. Wait for the workflow run to finish
 
 # Development <a name="development"></a>
 
