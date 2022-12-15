@@ -474,10 +474,6 @@ main() {
   # Variables inherited from GitLab CI
   local this_branch="$CI_COMMIT_REF_NAME"
   local initial_commit_sha="$CI_COMMIT_SHA"
-  local was_triggered_manually
-  if [ "${CI_JOB_MANUAL:-}" == true ]; then
-    was_triggered_manually=true
-  fi
 
   local is_pr_branch
   if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
@@ -621,11 +617,6 @@ main() {
       setup_local_cratesio
     ;;
     default)
-      if [ ! "${was_triggered_manually:-}" ]; then
-        # TODO: enable it after local instance publishing works for a while on CI
-        log "Publishing to crates.io is temporarily disabled"; exit 0
-      fi
-
       if [ ! "$github_token" ]; then
         die "\$github_token is empty"
       fi
