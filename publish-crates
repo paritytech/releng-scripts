@@ -727,6 +727,9 @@ main() {
     git commit -q -m "update dependencies after publish" -m "generated from $ci_job_url"
 
     local target_branch="ci-crates-publishing-update"
+    if git rev-parse --verify "$target_branch" >/dev/null; then
+      git branch -D "$target_branch"
+    fi
     git checkout -b "$target_branch"
 
     local target_remote="https://token:$github_token@github.com/$repo_owner/$repo.git"
