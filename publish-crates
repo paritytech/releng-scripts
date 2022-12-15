@@ -440,7 +440,7 @@ setup_repository() {
 
   local ignores="/.tmp"$'\n'"/$this_file_dirname"
   if [ "${SPUB_TMP:-}" ]; then
-    ignores+=$'\n'"$SPUB_TMP"
+    ignores+=$'\n'"/$SPUB_TMP"
   fi
   echo "$ignores" > "$tmp/.gitignore"
 
@@ -685,6 +685,7 @@ main() {
     if [ "${SPUB_TMP:: 1}" != '/' ]; then
       export SPUB_TMP="$PWD/$SPUB_TMP"
     fi
+    rm -rf "$SPUB_TMP"
     mkdir -p "$SPUB_TMP"
   fi
 
