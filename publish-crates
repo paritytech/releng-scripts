@@ -450,7 +450,7 @@ main() {
   # shellcheck disable=SC2153 # lowercase counterpart
   local repo="$REPO"
   local spub_start_from="${SPUB_START_FROM:-}"
-  local spub_publish="${SPUB_PUBLISH:-}"
+  local spub_publish_only="${SPUB_PUBLISH_ONLY:-}"
   local spub_verify_from="${SPUB_VERIFY_FROM:-}"
   local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
   local spub_exclude="${SPUB_EXCLUDE:-}"
@@ -528,7 +528,7 @@ main() {
     else
       die "Crate name had unexpected format: $crate"
     fi
-  done < <(echo "$spub_publish")
+  done < <(echo "$spub_publish_only")
 
   if [ ${#crates_to_publish[*]} -eq 0 ]; then
     if [ "$spub_publish_all" ]; then
