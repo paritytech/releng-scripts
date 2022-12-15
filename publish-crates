@@ -717,6 +717,8 @@ main() {
 
   if [ "${should_submit_pr:-}" ] && [ "${has_diff:-}" ] && [ "$subpub_exit_code" -eq 0 ]; then
     git reset -q "$initial_commit_sha"
+    # some other job is saving artifacts to crate-docs ??
+    rm -rf crate-docs
     git add .
     git commit -q -m "update dependencies after publish" -m "generated from $ci_job_url"
 
