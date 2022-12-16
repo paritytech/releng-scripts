@@ -749,7 +749,15 @@ main() {
 
     if [ "$open_pr_count" -eq 0 ]; then
       local title="[AUTOMATED] Update crate versions after publish"
-      local body="# :exclamation: DO NOT push commits to this PR! This PR is generated automatically through CI"
+      local body="
+# :exclamation: DO NOT push commits to this PR! This PR was created automatically through CI
+
+This PR includes crate version updates after they were published to crates.io by the publishing automation.
+
+After the publishing works on \`master\` this PR's branch will automatically be **forced pushed to** with the version updates on top of the latest \`master\` commit. **You should not push commits to this PR** since they'll be overwritten by the force push. If you need to fix anything, instead branch off this PR's branch and create a new PR.
+
+For additional context see https://github.com/paritytech/releng-scripts/wiki/Crates-publishing-automation#toc.
+"
       local payload
       payload="$(jq -n \
         --arg title "$title" \
