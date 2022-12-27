@@ -27,8 +27,8 @@ delete_from_s3() {
   local destination="s3://$bucket/$bucket_key"
   local cmd=(
     aws s3 rm
-    "${general_backend_options[@]}"
-    "${backend_upload_options[@]}"
+    "${general_backend_args[@]}"
+    "${forwarded_backend_args[@]}"
     "$destination"
   )
 

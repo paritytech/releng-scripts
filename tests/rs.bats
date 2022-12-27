@@ -189,6 +189,6 @@ teardown() {
 
 @test "files can be downloaded" {
   touch_snapshot
-  run "$project_root/rs" "${downloader_default_args[@]}" s3 "$fixtures_dir/foo.txt"
+  run "$project_root/rs" "${downloader_default_args[@]}"
   assert_snapshot
 }

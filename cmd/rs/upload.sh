@@ -41,8 +41,9 @@ upload_to_s3() {
   local destination="s3://$bucket/$bucket_key"
   local cmd=(
     aws s3 cp
-    "${general_backend_options[@]}"
-    "${backend_upload_options[@]}"
+    "${general_backend_args[@]}"
+    "${backend_upload_args[@]}"
+    "${forwarded_backend_args[@]}"
     --
     "$file"
     "$destination"
@@ -74,7 +75,7 @@ upload_to_s3() {
       --output json \
       --bucket "$bucket" \
       --key "$bucket_key" \
-      "${general_backend_options[@]:-}"
+      "${general_backend_args[@]:-}"
     )"
     case "$response" in
       *"Not Found")

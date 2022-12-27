@@ -52,8 +52,8 @@ handle_backend_options() {
     ;;
   esac
 
-  general_backend_options=() # options which apply to the whole backend's CLI
-  backend_upload_options=()  # options which apply only to the upload command
+  general_backend_args=() # options which apply to the whole backend's CLI
+  backend_upload_args=()  # options which apply only to the upload command
 
   if [ "$visibility" ]; then
     case "$backend" in
@@ -62,10 +62,10 @@ handle_backend_options() {
           upload)
             case "$visibility" in
               public)
-                backend_upload_options+=(--acl public-read)
+                backend_upload_args+=(--acl public-read)
               ;;
               private)
-                backend_upload_options+=(--acl private)
+                backend_upload_args+=(--acl private)
               ;;
               *)
                 die "Invalid visibility: $visibility"
@@ -102,7 +102,7 @@ handle_backend_options() {
         # targetting a local S3 mock service such as https://github.com/adobe/S3Mock
         export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
-        general_backend_options+=(
+        general_backend_args+=(
           "--endpoint-url=https://localhost:9191"
           "--no-verify-ssl"
         )
@@ -115,6 +115,7 @@ handle_backend_options() {
 
   # Collect options to be forwarded to the backend's CLI
 
+  forwarded_backend_args=()  # options which are forwarded to the command's CLI
   if [ "$1" == '-' ]; then
     # "-" starts the chain of arguments to be passed to the backend
     shift
@@ -125,7 +126,7 @@ handle_backend_options() {
           break
         ;;
         *)
-          backend_upload_options+=("$1")
+          forwarded_backend_args+=("$1")
           shift
         ;;
       esac

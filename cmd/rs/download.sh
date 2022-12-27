@@ -24,8 +24,22 @@ download_from_s3() {
   local bucket="$1"
   local bucket_key="$2"
 
-  >&2 echo "TODO: IMPLEMENT ME!"
-  exit 1
+  local destination="s3://$bucket/$bucket_key"
+  local cmd=(
+    aws s3 cp
+    "${general_backend_args[@]}"
+    "${forwarded_backend_args[@]}"
+    --
+    "$destination"
+    .
+  )
+
+  if [ "${DRY_RUN:-}" ]; then
+    log "${cmd[*]}"
+    return 0
+  fi
+
+  "${cmd[@]}"
 }
 
 # Usage guidance
