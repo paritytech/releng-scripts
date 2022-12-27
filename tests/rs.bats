@@ -29,6 +29,14 @@ deleter_default_args=(
   s3 "$fixtures_dir/foo.txt"
 )
 
+downloader_base_args=(download --bucket test)
+downloader_dry_args=("${downloader_base_args[@]}" --dry custom test)
+downloader_default_args=(
+  "${downloader_base_args[@]}"
+  custom test
+  s3 "$fixtures_dir/foo.txt"
+)
+
 setup() {
   set -Eeu -o pipefail
   shopt -s inherit_errexit
@@ -67,6 +75,12 @@ teardown() {
 @test "delete help can be printed" {
   touch_snapshot
   run "$project_root/rs" delete --help
+  assert_snapshot status
+}
+
+@test "download help can be printed" {
+  touch_snapshot
+  run "$project_root/rs" download --help
   assert_snapshot status
 }
 
@@ -164,5 +178,17 @@ teardown() {
 @test "deleting with --dry works" {
   touch_snapshot
   run "$project_root/rs" "${deleter_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}
+
+@test "downloading with --dry works" {
+  touch_snapshot
+  run "$project_root/rs" "${downloader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}
+
+@test "files can be downloaded" {
+  touch_snapshot
+  run "$project_root/rs" "${downloader_default_args[@]}"
   assert_snapshot
 }
