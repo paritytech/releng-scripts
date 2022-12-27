@@ -115,7 +115,7 @@ handle_backend_options() {
 
   # Collect options to be forwarded to the backend's CLI
 
-  forwarded_backend_args=()  # options which are forwarded to the command's CLI
+  forwarded_backend_args=()  # options which are forwarded to the backend's CLI
   if [ "$1" == '-' ]; then
     # "-" starts the chain of arguments to be passed to the backend
     shift
