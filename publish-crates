@@ -1,0 +1,787 @@
+#!/usr/bin/env bash
+
+## A script for publishing workspace crates to a target crates.io instance.
+## You'll need to set up some environment variables in advance (see `main`).
+
+echo "
+publish-crates
+========================
+
+This script publishes all workspace crates to the target crates.io instance of
+choice. It can either publish them to a local crates.io instance (which is set
+up by this script) or the official crates.io registry.
+
+This script is intended to be used from GitLab CI. Consider running subpub
+directly if you're interested in running it somewhere else.
+"
+
+set -Eeu -o pipefail
+shopt -s inherit_errexit
+
+root="$PWD"
+tmp="$root/.tmp"
+cratesio_repo="$tmp/crates.io"
+tmp_cargo_root="$tmp/cargo"
+yj="$tmp/yj"
+
+on_exit() {
+  local exit_code=$?
+
+  set +x
+
+  rm -rf "$tmp"
+  pkill -P "$$" || :
+
+  exit $exit_code
+}
+trap on_exit EXIT
+
+die() {
+  local exit_code=$?
+
+  set +x
+
+  local kill_group
+  if [ "${2:-}" ]; then
+    case "$1" in
+      all)
+        kill_group="$(ps -o pgid= $$ | tr -d " ")"
+      ;;
+      "") ;;
+      *)
+        log "Invalid operation $1; ignoring"
+      ;;
+    esac
+    shift
+  fi
+
+  if [ "${1:-}" ]; then
+    >&2 echo "$1"
+  fi
+
+  if [ "${kill_group:-}" ]; then
+    kill -- "-$kill_group"
+  else
+    pkill -P "$$" || :
+  fi
+
+  if [ "$exit_code" -ne 0 ]; then
+    exit "$exit_code"
+  else
+    exit 1
+  fi
+}
+
+set -xv
+
+setup_local_cratesio() {
+  load_workspace_crates
+
+  git clone --branch releng https://github.com/paritytech/crates.io "$cratesio_repo"
+
+  >/dev/null pushd "$cratesio_repo"
+
+  mkdir local_uploads tmp
+
+  local cratesio_token_prefix="--$$--"
+
+  diesel migration run --locked-schema
+
+  script/init-local-index.sh
+
+  local pipe="$tmp/pipe"
+  mkfifo "$pipe"
+
+  # CARGO_REGISTRIES_LOCAL_INDEX needs to be exported before the
+  # background-worker is launched since `cargo clean` relies on this variable
+  export CARGO_REGISTRIES_LOCAL_INDEX=file://"$cratesio_repo"/tmp/index-bare
+
+  export GIT_REPO_URL="file://$PWD/tmp/index-bare"
+  export GH_CLIENT_ID=
+  export GH_CLIENT_SECRET=
+  export WEB_ALLOWED_ORIGINS=http://localhost:8888,http://localhost:4200
+  export SESSION_KEY=badkeyabcdefghijklmnopqrstuvwxyzabcdef
+  export CRATESIO_TOKEN_PREFIX="$cratesio_token_prefix"
+  export WEB_NEW_PKG_RATE_LIMIT_BURST=10248
+  export CRATESIO_LOCAL_CRATES="${workspace_crates[*]}"
+
+  cargo run --quiet --bin server | while IFS= read -r line; do
+    case "$line" in
+      "$cratesio_token_prefix="*)
+        echo "${line:$(( ${#cratesio_token_prefix} + 1 ))}" > "$pipe"
+      ;;
+      *)
+        log "$line"
+      ;;
+    esac
+  done || die all "Crates.io server failed" &
+
+  log "Waiting for token from crates.io server..."
+  local token
+  token="$(cat "$pipe")"
+  log "Got token from crates.io server: $token"
+
+  local crate_committed_msg_prefix="Commit and push finished for \"Updating crate \`"
+  export SPUB_CRATES_COMMITTED_FILE="$tmp/crates-committed"
+  touch "$SPUB_CRATES_COMMITTED_FILE"
+
+  # need set TMPDIR to disk because crates.io index is too big for tmpfs on RAM
+  local old_tmpdir="${TMPDIR:-}"
+  mkdir -p tmp/worker-tmp
+  export TMPDIR="$PWD/tmp/worker-tmp"
+  cargo run --quiet --bin background-worker | while IFS= read -r line; do
+    log "$line"
+    case "$line" in
+      "Runner booted, running jobs")
+        echo "$line" > "$pipe"
+      ;;
+      # example line: Commit and push finished for "Updating crate `foo#0.1.0`"
+      "$crate_committed_msg_prefix"*)
+        line_remainder="${line:${#crate_committed_msg_prefix}}"
+        if [[ "$line_remainder" =~ ^([^#]+)#([[:digit:].]+) ]]; then
+          crate="${BASH_REMATCH[1]}"
+          crate_version="${BASH_REMATCH[2]}"
+
+          # Clear the registry's cache after a crate is committed to the remote
+          # registry to force its redownload
+          cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+          find "$cargo_home" \
+            -type d -path "**/$crate-$crate_version" \
+            -print \
+            -prune \
+            -exec rm -rf {} \;
+          find "$cargo_home" \
+            -type f -path "**/$crate-$crate_version.crate" \
+            -print \
+            -exec rm -f {} \;
+
+          # Clear the build cache to force the crate to be recompiled
+          cargo clean --quiet \
+            --manifest-path "$root/Cargo.toml" \
+            -p "$crate" \
+            || die all "Failed to clear build cache for crate $crate"
+
+          echo "$crate" >> "$SPUB_CRATES_COMMITTED_FILE"
+        else
+          die all "background-worker line had unexpected format: $line"
+        fi
+      ;;
+    esac
+  done || die all "Crates.io background-worker failed" &
+  if [ "$old_tmpdir" ]; then
+    export TMPDIR="$old_tmpdir"
+  else
+    unset TMPDIR
+    export -n TMPDIR
+  fi
+  unset old_tmpdir
+
+  log "Waiting for the workers to be ready..."
+  read -r < "$pipe"
+  log "Workers are ready"
+
+  >/dev/null popd
+
+  export SPUB_REGISTRY=local
+  export SPUB_CRATES_API=http://localhost:8888/api/v1
+  export SPUB_REGISTRY_TOKEN="$token"
+}
+
+setup_subpub() {
+  local branch="$1"
+  cargo install --quiet \
+    --git https://github.com/paritytech/subpub \
+    --branch "$branch" \
+    --root "$tmp_cargo_root"
+  subpub --version
+}
+
+setup_diesel() {
+  cargo install --quiet diesel_cli \
+    --version 1.4.1 \
+    --no-default-features \
+    --features postgres \
+    --root "$tmp_cargo_root"
+  diesel --version
+}
+
+setup_postgres() {
+  apt install -qq --assume-yes --no-install-recommends postgresql-11 libpq-dev sudo
+  pg_ctlcluster 11 main start
+
+  local db_user=pg
+  local db_password=pg
+  local db_name=crates_io
+  export DATABASE_URL="postgres://$db_user:$db_password@localhost:5432/$db_name"
+
+  log "Attempting to connect to the database @ $DATABASE_URL"
+  local is_db_ready
+  for ((i=0; i < 8; i++)); do
+    if pg_isready -d "$DATABASE_URL"; then
+      is_db_ready=true
+      break
+    else
+      sleep 8
+    fi
+  done
+  if [ ! "${is_db_ready:-}" ]; then
+    die "Timed out on database connection"
+  fi
+
+  sudo -u postgres createuser -s -i -d -r -l -w "$db_user"
+  sudo -u postgres createdb --owner "$db_user" "$db_name"
+  sudo -u postgres psql -c "ALTER USER $db_user WITH ENCRYPTED PASSWORD '$db_password';"
+}
+
+load_workspace_crates() {
+  if [ "${workspace_crates:-}" ]; then
+    return
+  fi
+  readarray -t workspace_crates < <(
+    cargo tree --quiet --workspace --depth 0 --manifest-path "$root/Cargo.toml" |
+    awk '{ if (length($1) == 0 || substr($1, 1, 1) == "[") { skip } else { print $1 } }' |
+    sort |
+    uniq
+  )
+  log "workspace crates: ${workspace_crates[*]}"
+  if [ ${#workspace_crates[*]} -lt 1 ]; then
+    die "No workspace crates detected for $root"
+  fi
+}
+
+load_publishable_workspace_crates() {
+  if [ "${publishable_workspace_crates:-}" ]; then
+    return
+  fi
+  readarray -t publishable_workspace_crates < <(
+    cargo metadata --quiet --format-version=1 --manifest-path "$root/Cargo.toml" |
+    jq -r '
+      . as $in |
+      paths | select(
+        (. | length == 3) and # .package, [N], .source
+        .[0]=="packages" and
+        .[2]=="source" and
+        . as $path | $in | getpath($path)==null # .source == null for workspace crates
+      ) as $crate_source_path |
+      del($crate_source_path[-1]) as $crate_path |
+      $in |
+      if
+        getpath($crate_path + ["publish"]) == null or
+        getpath($crate_path + ["publish"]) == true
+      then
+        [getpath($crate_path + ["name"])]
+      else
+        []
+      end
+      | .[]
+    '
+  )
+  if [ ${#publishable_workspace_crates[*]} -lt 1 ]; then
+    die "No publishable workspace crates detected for the workspace of $root"
+  fi
+}
+
+setup_yj() {
+  if [ -e "$yj" ]; then
+    return
+  fi
+
+  curl -sSLf -o "$yj" https://github.com/sclevine/yj/releases/download/v5.1.0/yj-linux-amd64
+
+  local expected_checksum="8ce43e40fda9a28221dabc0d7228e2325d1e959cd770487240deb47e02660986  $yj"
+
+  local actual_checksum
+  actual_checksum="$(sha256sum "$yj")"
+
+  if [ "$expected_checksum" != "$actual_checksum" ]; then
+    die "File had invalid checksum: $yj
+Expected: $expected_checksum
+Actual: $actual_checksum"
+  fi
+
+  chmod +x "$yj"
+}
+
+check_cratesio_crate() {
+  local crate="$1"
+  local cratesio_api="$2"
+  local expected_owner="$3"
+
+  log "Checking if the crate $crate is compliant with crates.io"
+
+  local owners_url="$cratesio_api/v1/crates/$crate/owners"
+
+  local owners_response exit_code
+  owners_response="$(curl -sSLf "$owners_url")" || exit_code=$?
+  case "${exit_code:-$?}" in
+    22) # 404 response, which means that the crate doesn't exist on crates.io
+      >&2 log "Crate $crate does not yet exist on crates.io according to $owners_url. Please follow the instructions of https://github.com/paritytech/releng-scripts#reserving-crates to reserve the crate."
+      return 1
+    ;;
+    0) ;;
+    *)
+      >&2 log "Request to $owners_url failed with exit code $exit_code"
+      return 1
+    ;;
+  esac
+
+  local owners_logins
+  owners_logins="$(echo -n "$owners_response" | jq -r '.users[] | .login')"
+
+  local found_owner
+  while IFS= read -r owner_login; do
+    if [ "$owner_login" == "$expected_owner" ]; then
+      found_owner=true
+      break
+    fi
+  done < <(echo "$owners_logins")
+
+  if [ ! "${found_owner:-}" ]; then
+    >&2 log "crates.io ownership for crate $crate is not set up as expected.
+
+The current owners were recognized from $owners_url:
+$owners_logins
+
+Failed to find $expected_owner among the above owners.
+
+The current owners were extracted from the following response:
+$owners_response
+"
+    return 1
+  fi
+}
+
+check_repository() {
+  local cratesio_api="$1"
+  local cratesio_crates_owner="$2"
+  local gh_api="$3"
+  local this_branch="$4"
+  local repo_owner="$5"
+  local repo="$6"
+  local check_for_crate_compliance="$7"
+  local is_pr_branch="$8"
+
+  local selected_crates=()
+
+  # if the branch belongs to a pull request, then check only the changed files
+  # changed within the pull request; otherwise, take all crates into account
+  if [ "$is_pr_branch" ]; then
+    local pr_number="$this_branch"
+
+    changed_pr_files=()
+    set +x
+    while IFS= read -r diff_line; do
+      if ! [[ "$diff_line" =~ ^\+\+\+[[:space:]]+b/(.+)$ ]]; then
+        continue
+      fi
+      set -x
+      local changed_file="${BASH_REMATCH[1]}"
+      changed_pr_files+=("$changed_file")
+      case "$changed_file" in
+        */Cargo.toml)
+          setup_yj
+
+          local manifest_json
+          manifest_json="$("$yj" -tj < "$changed_file")"
+
+          local publish
+          publish="$(echo -n "$manifest_json" | jq -r '.package.publish')"
+          case "$publish" in
+            null|true)
+              local crate
+              crate="$(echo -n "$manifest_json" | jq -e -r '.package.name')"
+              selected_crates+=("$crate")
+            ;;
+            false) ;;
+            *)
+              die "Unexpected value for .package.publish of $changed_file: $publish"
+            ;;
+          esac
+        ;;
+      esac
+      set +x
+    done < <(
+      curl -sSLf \
+        -H "Accept: application/vnd.github.v3.diff" \
+        -H "Authorization: token $GITHUB_PR_TOKEN" \
+        "$gh_api/repos/$repo_owner/$repo/pulls/$pr_number" \
+      || die all "Failed to get diff for PR $pr_number"
+    )
+    set -x
+  else
+    load_publishable_workspace_crates
+    selected_crates=("${publishable_workspace_crates[@]}")
+  fi
+
+  if [ "$check_for_crate_compliance" ]; then
+    local failed_crates=()
+
+    for crate in "${selected_crates[@]}"; do
+      if ! check_cratesio_crate \
+        "$crate" \
+        "$cratesio_api" \
+        "$cratesio_crates_owner"
+      then
+        failed_crates+=("$crate")
+      fi
+    done
+
+    if [ ${#failed_crates[*]} -gt 0 ]; then
+      >&2 log "The following crates failed the crates.io compliance check: ${failed_crates[*]}"
+      exit 1
+    fi
+  fi
+}
+
+setup_repository() {
+  local this_file="${BASH_SOURCE[0]}"
+  local this_file_dir="${this_file%/*}"
+  local this_file_dirname="${this_file_dir##*/}"
+
+  local ignores="/.tmp"$'\n'"/$this_file_dirname"
+  if [ "${SPUB_TMP:-}" ]; then
+    ignores+=$'\n'"/$SPUB_TMP"
+  fi
+  echo "$ignores" > "$tmp/.gitignore"
+
+  git config core.excludesFile "$tmp/.gitignore"
+}
+
+main() {
+  # Script-specific variables
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local cratesio_target_instance="$CRATESIO_TARGET_INSTANCE"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local cratesio_crates_owner="$CRATESIO_CRATES_OWNER"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local gh_api="$GH_API"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local cratesio_api="$CRATESIO_API"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local repo_owner="$REPO_OWNER"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local repo="$REPO"
+  local spub_start_from="${SPUB_START_FROM:-}"
+  local spub_publish_only="${SPUB_PUBLISH_ONLY:-}"
+  local spub_verify_from="${SPUB_VERIFY_FROM:-}"
+  local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
+  local spub_exclude="${SPUB_EXCLUDE:-}"
+  local spub_branch="${SPUB_BRANCH:-releng}"
+  local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
+  local github_token="${GITHUB_TOKEN:-}"
+  local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
+
+  # Variables inherited from GitLab CI
+  local this_branch="$CI_COMMIT_REF_NAME"
+  local initial_commit_sha="$CI_COMMIT_SHA"
+  # shellcheck disable=SC2153 # lowercase counterpart
+  local ci_job_url="$CI_JOB_URL"
+
+  local is_pr_branch
+  if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+    is_pr_branch=true
+  fi
+
+  git config --global user.name "CI"
+  git config --global user.email "<>"
+  rm -rf "$tmp"
+  mkdir -p "$tmp"
+  export PATH="$tmp:$PATH"
+  mkdir -p "$tmp_cargo_root"
+  export PATH="$tmp_cargo_root/bin:$PATH"
+
+  if [[ $- =~ x ]]; then
+    # when -x is set up the logged messages will be printed during execution, so there's no need to
+    # also echo them; create a no-op executable for this purpose
+    touch "$tmp/log"
+    chmod +x "$tmp/log"
+  else
+    ln -s "$(which echo)" "$tmp/log"
+  fi
+
+  setup_repository
+
+  local check_for_crate_compliance
+  case "$cratesio_target_instance" in
+    local)
+      check_for_crate_compliance=true
+    ;;
+    default)
+      # compliance is not checked for this target because we assume it has
+      # already been checked for the local target test
+    ;;
+    *)
+      die "Invalid target: $cratesio_target_instance"
+    ;;
+  esac
+
+  check_repository \
+    "$cratesio_api" \
+    "$cratesio_crates_owner" \
+    "$gh_api" \
+    "$this_branch" \
+    "$repo_owner" \
+    "$repo" \
+    "${check_for_crate_compliance:-}" \
+    "${is_pr_branch:-}"
+
+  local subpub_args=(publish --root "$PWD")
+
+  local crates_to_publish=()
+
+  while IFS= read -r crate; do
+    if [ ! "$crate" ]; then
+      continue
+    fi
+    if [[ "$crate" =~ [^[:space:]]+ ]]; then
+      crates_to_publish+=("${BASH_REMATCH[0]}")
+    else
+      die "Crate name had unexpected format: $crate"
+    fi
+  done < <(echo "$spub_publish_only")
+
+  if [ ${#crates_to_publish[*]} -eq 0 ]; then
+    if [ "$spub_publish_all" ]; then
+      :
+    elif [ "${changed_pr_files:-}" ]; then
+      for file in "${changed_pr_files[@]}"; do
+        local current="$file"
+        while true; do
+          current="$(dirname "$current")"
+          if [ "$current" == . ]; then
+            break
+          fi
+
+          local manifest_path="$root/$current/Cargo.toml"
+          if [ -e "$manifest_path" ]; then
+            setup_yj
+
+            local manifest_json
+            manifest_json="$("$yj" -tj < "$manifest_path")"
+
+            local publish
+            publish="$(echo -n "$manifest_json" | jq -r '.package.publish')"
+            case "$publish" in
+              null|true)
+                local crate
+                crate="$(echo -n "$manifest_json" | jq -e -r '.package.name')"
+
+                local crate_already_inserted
+                for prev_crate_to_check in "${crates_to_publish[@]}"; do
+                  if [ "$prev_crate_to_check" == "$crate"  ]; then
+                    crate_already_inserted=true
+                    break
+                  fi
+                done
+
+                if [ "${crate_already_inserted:-}" ]; then
+                  unset crate_already_inserted
+                else
+                  crates_to_publish+=("$crate")
+                fi
+              ;;
+              false) ;;
+              *)
+                die "Unexpected value for .package.publish of $manifest_path: $publish"
+              ;;
+            esac
+
+            break
+          fi
+        done
+      done
+      if [ ${#crates_to_publish[*]} -gt 0 ]; then
+        for crate in "${crates_to_publish[@]}"; do
+          subpub_args+=(--verify-only "$crate")
+        done
+      else
+        log "No crate changes were detected for this PR"
+        exit
+      fi
+    elif [ "${is_pr_branch:-}" ]; then
+      log "No file changes were detected for this PR"
+      exit
+    fi
+  fi
+
+  local should_submit_pr use_clean_environment
+
+  case "$cratesio_target_instance" in
+    local)
+      if [ ! "${is_pr_branch:-}" ]; then
+        subpub_args+=(--post-check)
+      fi
+
+      apt update -qq
+      setup_postgres
+      # diesel setup should be after setup_progress because it depends on libpq
+      setup_diesel
+      setup_local_cratesio
+    ;;
+    default)
+      if [ ! "$github_token" ]; then
+        die "\$github_token is empty"
+      fi
+
+      if [ "$cratesio_token" ]; then
+        export CARGO_REGISTRY_TOKEN="$cratesio_token"
+      else
+        die "\$cratesio_token is empty"
+      fi
+
+      export SPUB_CRATES_API=http://crates.io/api/v1
+      subpub_args+=(
+        --index-url "https://raw.githubusercontent.com/rust-lang/crates.io-index"
+        --index-repository "https://github.com/rust-lang/crates.io-index"
+      )
+
+      should_submit_pr=true
+      use_clean_environment=true
+    ;;
+    *)
+      die "Invalid target: $cratesio_target_instance"
+    ;;
+  esac
+
+  if [ "${should_submit_pr:-}" ]; then
+    subpub_args+=(--for-pull-request)
+  fi
+
+  for crate_to_publish in "${crates_to_publish[@]}"; do
+    subpub_args+=(--publish-only "$crate_to_publish")
+  done
+
+  if [ "$spub_start_from" ]; then
+    subpub_args+=(--start-from "$spub_start_from")
+  fi
+
+  if [ "$spub_verify_from" ]; then
+    subpub_args+=(--verify-from "$spub_verify_from")
+  fi
+
+  if [ "$spub_after_publish_delay" ]; then
+    subpub_args+=(--after-publish-delay "$spub_after_publish_delay")
+  fi
+
+  while IFS= read -r crate; do
+    if [ ! "$crate" ]; then
+      continue
+    fi
+    if [[ "$crate" =~ [^[:space:]]+ ]]; then
+      subpub_args+=(-e "${BASH_REMATCH[0]}")
+    else
+      die "Crate name had unexpected format: $crate"
+    fi
+  done < <(echo "$spub_exclude")
+
+  if [ "${SPUB_TMP:-}" ]; then
+    if [ "${SPUB_TMP:: 1}" != '/' ]; then
+      export SPUB_TMP="$PWD/$SPUB_TMP"
+    fi
+    rm -rf "$SPUB_TMP"
+    mkdir -p "$SPUB_TMP"
+  fi
+
+  setup_subpub "$spub_branch"
+
+  if [ "${use_clean_environment:-}" ]; then
+    export CARGO_TARGET_DIR="$tmp/target"
+    mkdir -p "$CARGO_TARGET_DIR"
+    export CARGO_HOME="$tmp/cargo"
+    mkdir -p "$CARGO_HOME"
+    subpub_args+=(
+      # Clearing $CARGO_HOME is needed to force cargo to redownload the
+      # crates.io index after crates are published.
+      # TODO: doing this introduces a lot of delay since the crates.io index has
+      # to be redownloaded after each crate is published. We should find a
+      # sensible workaround which isn't about nuking the registry cache.
+      --clear-cargo-home "$CARGO_HOME"
+    )
+  fi
+
+  local subpub_exit_code=0
+  subpub "${subpub_args[@]}" || subpub_exit_code=$?
+
+  local has_diff
+
+  if [ ! "${is_pr_branch:-}" ]; then
+    local diff
+    diff="$(git diff "$initial_commit_sha")"
+
+    if [ "${SPUB_TMP:-}" ]; then
+      mkdir -p "$SPUB_TMP"
+      echo "$diff" > "$SPUB_TMP/after-publish.diff"
+    fi
+
+    if [ ${#diff} -gt 0 ]; then
+      has_diff=true
+    fi
+  fi
+
+  if [ "${should_submit_pr:-}" ] && [ "${has_diff:-}" ] && [ "$subpub_exit_code" -eq 0 ]; then
+    git reset -q "$initial_commit_sha"
+    git add .
+    git commit -q -m "update dependencies after publish" -m "generated from $ci_job_url"
+
+    local target_branch="ci-crates-publishing-update"
+    if git rev-parse --verify "$target_branch" >/dev/null; then
+      git branch -D "$target_branch"
+    fi
+    git checkout -b "$target_branch"
+
+    local target_remote="https://token:$github_token@github.com/$repo_owner/$repo.git"
+    if git remote get-url target >/dev/null; then
+      git remote set-url target "$target_remote"
+    else
+      git remote add target "$target_remote"
+    fi
+    git push --force target "$target_branch"
+    git remote remove target
+
+    local target_branch_filter
+    target_branch_filter="$(echo -n "$repo_owner:$target_branch" | jq -sRr @uri)"
+    local open_pr_count
+    open_pr_count="$(curl -sSLf \
+      -H "Authorization: token $github_token" \
+      "$gh_api/repos/$repo_owner/$repo/pulls?state=open&head=$target_branch_filter" |
+      jq -e -r '. | length'
+    )"
+
+    if [ "$open_pr_count" -eq 0 ]; then
+      local title="[AUTOMATED] Update crate versions after publish"
+      local body="
+# :exclamation: DO NOT push commits to this PR! This PR was created automatically through CI
+
+This PR includes crate version updates after they were published to crates.io by the publishing automation.
+
+After the publishing works on \`master\` this PR's branch will automatically be **forced pushed to** with crate version updates on top of the latest \`master\` commit. **You should not push commits to this PR** since they would be overwritten by the force push. If you need to fix anything, instead branch off this PR's branch and create a new PR.
+
+Note: it's normal for crate versions to increase past a single version in the diff because a crate might be republished from \`master\` *multiple times* before this PR is merged. Visit \`https://crates.io/crates/\$CRATE/versions\` if you want to see for yourself that all the versions in-between were indeed published.
+
+For additional context see https://github.com/paritytech/releng-scripts/wiki/Crates-publishing-automation#toc.
+"
+      local payload
+      payload="$(jq -n \
+        --arg title "$title" \
+        --arg body "$body" \
+        --arg base "$this_branch" \
+        --arg head "$target_branch" \
+        '{
+            title: $title,
+            body: $body,
+            head: $head,
+            base: $base
+        }'
+      )"
+      curl -sSLf \
+        -H "Authorization: token $github_token" \
+        -X POST \
+        -d "$payload" \
+        "$gh_api/repos/$repo_owner/$repo/pulls"
+    fi
+  fi
+
+  exit "$subpub_exit_code"
+}
+
+main "$@"

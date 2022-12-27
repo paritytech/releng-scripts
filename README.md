@@ -1,8 +1,7 @@
 # TOC
 
 - [Introduction](#introduction)
-- [Tools](#tools)
-  - [rs](#tools-rs)
+- [Reserving crates](#reserving-crates)
 - [Usage](#usage)
   - [GitHub Actions](#usage-github-actions)
   - [GitLab Jobs](#usage-gitlab-jobs)
@@ -21,25 +20,16 @@
 This repository contains scripts managed and used by
 [release-engineering](https://github.com/orgs/paritytech/teams/release-engineering).
 
-# Tools <a name="tools"></a>
+See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tools#TOC) for information on the functionality provided through this repository.
 
-## rs <a name="tools-rs"></a>
+# Reserving crates <a name="reserving-crates"></a>
 
-[`rs`](/rs) (stands for **R**emote **S**torage) is a tool for dealing with
-cloud storage platforms such as AWS S3. It offers the following benefits over
-using the backends' APIs directly:
-
-- It provides a common interface for different backend APIs.
-- It automatically sets the right path for a given file based on the
-  `OPERATION` so that users don't have to remember path conventions
-  manually.
-- Its API is more resilient to breaking changes since arguments can be adapted
-  over time according to our needs.
-
-Try `rs --help` for guidance on how to use it.
-
-See https://github.com/paritytech/release-engineering/pull/113 for the
-initial concept and motivations.
+1. Go to https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml
+2. Click the "Run workflow" button to access the workflow's form
+3. Fill and send the workflow's form. After that a workflow run
+  ([example](https://github.com/paritytech/releng-scripts/actions/runs/3642900863/attempts/1))
+  will be created; you might need to refresh the page in order to see it.
+4. Wait for the workflow run to finish
 
 # Usage <a name="usage"></a>
 

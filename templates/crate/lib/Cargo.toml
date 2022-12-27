@@ -1,0 +1,10 @@
+[package]
+name = "{{name}}"
+edition = "2021"
+version = "{{version}}"
+description = "{{description}}"
+authors = ["{{author}}"]
+homepage = "{{repository_url}}"
+license = "{{license}}"
+repository = "{{repository_url}}"
+readme = "README.md"
