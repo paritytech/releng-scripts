@@ -476,6 +476,7 @@ main() {
   local initial_commit_sha="$CI_COMMIT_SHA"
   # shellcheck disable=SC2153 # lowercase counterpart
   local ci_job_url="$CI_JOB_URL"
+  local commit_message="$CI_COMMIT_MESSAGE"
 
   local is_pr_branch
   if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
@@ -501,14 +502,24 @@ main() {
 
   setup_repository
 
+  local pr_commit_message_start="[CI] adjust workspace versions after publishing"
+
   local check_for_crate_compliance
   case "$cratesio_target_instance" in
     local)
       check_for_crate_compliance=true
     ;;
     default)
-      # compliance is not checked for this target because we assume it has
+      # crate compliance is not checked for this target because we assume it has
       # already been checked for the local target test
+
+      # it's not necessary to publish to crates.io for commits of the
+      # auto-generated PR since they should only contain version bumps for
+      # workspace crates, which don't matter for publishing anyhow
+      if [ "${commit_message:: ${#pr_commit_message_start}}"$'\n' == "$pr_commit_message_start"$'\n' ]; then
+        log "Not processing this commit because its commit message starts with: $pr_commit_message_start"
+        exit 0
+      fi
     ;;
     *)
       die "Invalid target: $cratesio_target_instance"
@@ -721,7 +732,7 @@ main() {
   if [ "${should_submit_pr:-}" ] && [ "${has_diff:-}" ] && [ "$subpub_exit_code" -eq 0 ]; then
     git reset -q "$initial_commit_sha"
     git add .
-    git commit -q -m "update dependencies after publish" -m "generated from $ci_job_url"
+    git commit -q -m "$pr_commit_message_start" -m "generated from $ci_job_url"
 
     local target_branch="ci-crates-publishing-update"
     if git rev-parse --verify "$target_branch" >/dev/null; then
