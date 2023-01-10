@@ -519,7 +519,7 @@ main() {
     ;;
     default)
       # crate compliance is not checked for this target because we assume it has
-      # already been checked for the local target test
+      # already been checked previously, when this script ran for local target
       check_commit_msg=true
       check_for_latest_commit=true
     ;;
