@@ -355,7 +355,7 @@ check_repository() {
   local cratesio_api="$1"
   local cratesio_crates_owner="$2"
   local gh_api="$3"
-  local this_branch="$4"
+  local this_ref="$4"
   local repo_owner="$5"
   local repo="$6"
   local check_for_crate_compliance="$7"
@@ -366,7 +366,7 @@ check_repository() {
   # if the branch belongs to a pull request, then check only the changed files
   # changed within the pull request; otherwise, take all crates into account
   if [ "$is_pr_branch" ]; then
-    local pr_number="$this_branch"
+    local pr_number="$this_ref"
 
     changed_pr_files=()
     set +x
@@ -472,15 +472,21 @@ main() {
   local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
 
   # Variables inherited from GitLab CI
-  local this_branch="$CI_COMMIT_REF_NAME"
+  local this_ref="$CI_COMMIT_REF_NAME"
   local initial_commit_sha="$CI_COMMIT_SHA"
   # shellcheck disable=SC2153 # lowercase counterpart
   local ci_job_url="$CI_JOB_URL"
   local commit_message="$CI_COMMIT_MESSAGE"
+  local ci_commit_tag="${CI_COMMIT_TAG:-}"
 
   local is_pr_branch
-  if [[ "$this_branch" =~ ^[[:digit:]]+$ ]]; then
+  if [[ "$this_ref" =~ ^[[:digit:]]+$ ]]; then
     is_pr_branch=true
+  fi
+
+  local is_tag_ref
+  if [ "$ci_commit_tag" ]; then
+    is_tag_ref=true
   fi
 
   git config --global user.name "CI"
@@ -520,6 +526,33 @@ main() {
         log "Not processing this commit because its commit message starts with: $pr_commit_message_start"
         exit 0
       fi
+
+      # Use git ls-remote to query what's the latest commit for this ref upstream
+      local remote_head_sha_cmd=(
+        git
+        ls-remote
+        "https://github.com/$repo_owner/$repo"
+        "$this_ref"
+      )
+      local remote_head_sha
+      remote_head_sha="$("${remote_head_sha_cmd[@]}")"
+
+      local expected_remote_head_sha="$initial_commit_sha"$'\t'
+      if [ "$is_tag_ref" ]; then
+        expected_remote_head_sha+="refs/tags/$this_ref"
+      else
+        expected_remote_head_sha+="refs/heads/$this_ref"
+      fi
+
+      if [ "$remote_head_sha" != "$expected_remote_head_sha" ]; then
+        die "Unexpected output for command: ${remote_head_sha_cmd[*]}
+
+Expected: $expected_remote_head_sha
+
+Actual: $remote_head_sha
+
+Note: this script should only be run for the latest commit of $this_ref!"
+      fi
     ;;
     *)
       die "Invalid target: $cratesio_target_instance"
@@ -530,7 +563,7 @@ main() {
     "$cratesio_api" \
     "$cratesio_crates_owner" \
     "$gh_api" \
-    "$this_branch" \
+    "$this_ref" \
     "$repo_owner" \
     "$repo" \
     "${check_for_crate_compliance:-}" \
@@ -775,7 +808,7 @@ For additional context see https://github.com/paritytech/releng-scripts/wiki/Cra
       payload="$(jq -n \
         --arg title "$title" \
         --arg body "$body" \
-        --arg base "$this_branch" \
+        --arg base "$this_ref" \
         --arg head "$target_branch" \
         '{
             title: $title,
