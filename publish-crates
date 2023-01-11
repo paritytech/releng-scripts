@@ -577,6 +577,14 @@ Note: this script should only be run for the latest commit of $this_ref!"
     "${check_for_crate_compliance:-}" \
     "${is_pr_branch:-}"
 
+  case "$repo" in
+    substrate) ;;
+    *)
+      echo "Crate publishing is temporarily disabled for this repository"
+      exit 0
+    ;;
+  esac
+
   local subpub_args=(publish --root "$PWD")
 
   local crates_to_publish=()
