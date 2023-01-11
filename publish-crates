@@ -514,23 +514,31 @@ main() {
   local check_for_latest_commit
   local check_commit_msg
   local spub_stop_at_step
+  local prevent_target_setup
   case "$cratesio_target_instance" in
     local)
       check_for_crate_compliance=true
-    ;;
-    default)
       case "$repo" in
-        substrate)
-          # crate compliance is not checked for this target because we assume it has
-          # already been checked previously, when this script ran for local target
-          :
-        ;;
+        substrate) ;;
         *)
-          check_for_crate_compliance=true
-          # TODO: Remove this after other repositories other than Substrate can be published
+          # TODO: Remove those statements after other repositories other than
+          # Substrate can be published
           spub_stop_at_step=validation
+          prevent_target_setup=true
         ;;
       esac
+    ;;
+    default)
+      # crate compliance is not checked for this target because we assume it has
+      # already been checked previously, when this script ran for local target
+
+      case "$repo" in
+        substrate) ;;
+        *)
+          die "Target $cratesio_target_instance is disabled for this repository"
+        ;;
+      esac
+
       check_commit_msg=true
       check_for_latest_commit=true
     ;;
@@ -675,11 +683,13 @@ Note: this script should only be run for the latest commit of $this_ref!"
         subpub_args+=(--post-check)
       fi
 
-      apt update -qq
-      setup_postgres
-      # diesel setup should be after setup_progress because it depends on libpq
-      setup_diesel
-      setup_local_cratesio
+      if [ ! "${prevent_target_setup:-}" ]; then
+        apt update -qq
+        setup_postgres
+        # diesel setup should be after setup_progress because it depends on libpq
+        setup_diesel
+        setup_local_cratesio
+      fi
     ;;
     default)
       if [ ! "$github_token" ]; then
