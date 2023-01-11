@@ -513,13 +513,24 @@ main() {
   local check_for_crate_compliance
   local check_for_latest_commit
   local check_commit_msg
+  local spub_stop_at_step
   case "$cratesio_target_instance" in
     local)
       check_for_crate_compliance=true
     ;;
     default)
-      # crate compliance is not checked for this target because we assume it has
-      # already been checked previously, when this script ran for local target
+      case "$repo" in
+        substrate)
+          # crate compliance is not checked for this target because we assume it has
+          # already been checked previously, when this script ran for local target
+          :
+        ;;
+        *)
+          check_for_crate_compliance=true
+          # TODO: Remove this after other repositories other than Substrate can be published
+          spub_stop_at_step=validation
+        ;;
+      esac
       check_commit_msg=true
       check_for_latest_commit=true
     ;;
@@ -576,14 +587,6 @@ Note: this script should only be run for the latest commit of $this_ref!"
     "$repo" \
     "${check_for_crate_compliance:-}" \
     "${is_pr_branch:-}"
-
-  case "$repo" in
-    substrate) ;;
-    *)
-      echo "Crate publishing is temporarily disabled for this repository"
-      exit 0
-    ;;
-  esac
 
   local subpub_args=(publish --root "$PWD")
 
@@ -742,6 +745,10 @@ Note: this script should only be run for the latest commit of $this_ref!"
     mkdir -p "$SPUB_TMP"
   fi
 
+  if [ "${spub_stop_at_step:-}" ]; then
+    subpub_args+=(--stop-at-step "$spub_stop_at_step")
+  fi
+
   setup_subpub "$spub_branch"
 
   if [ "${use_clean_environment:-}" ]; then
@@ -761,6 +768,10 @@ Note: this script should only be run for the latest commit of $this_ref!"
 
   local subpub_exit_code=0
   subpub "${subpub_args[@]}" || subpub_exit_code=$?
+
+  if [ "${spub_stop_at_step:-}" ]; then
+    exit "$subpub_exit_code"
+  fi
 
   local has_diff
 
