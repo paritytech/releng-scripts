@@ -190,7 +190,7 @@ setup_local_cratesio() {
 setup_subpub() {
   local branch="$1"
   cargo install --quiet \
-    --git https://github.com/paritytech/subpub \
+    --git https://github.com/joao-paulo-parity/subpub \
     --branch "$branch" \
     --root "$tmp_cargo_root"
   subpub --version
