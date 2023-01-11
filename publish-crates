@@ -466,7 +466,7 @@ main() {
   local spub_verify_from="${SPUB_VERIFY_FROM:-}"
   local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
   local spub_exclude="${SPUB_EXCLUDE:-}"
-  local spub_branch="${SPUB_BRANCH:-releng}"
+  local spub_branch="${SPUB_BRANCH:-wip}"
   local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
   local github_token="${GITHUB_TOKEN:-}"
   local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
