@@ -465,7 +465,6 @@ main() {
   local spub_start_from="${SPUB_START_FROM:-}"
   local spub_publish_only="${SPUB_PUBLISH_ONLY:-}"
   local spub_verify_from="${SPUB_VERIFY_FROM:-}"
-  local spub_after_publish_delay="${SPUB_AFTER_PUBLISH_DELAY:-}"
   local spub_exclude="${SPUB_EXCLUDE:-}"
   local spub_branch="${SPUB_BRANCH:-releng}"
   local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
@@ -686,6 +685,7 @@ Note: this script should only be run for the latest commit of $this_ref!"
       subpub_args+=(
         --index-url "https://raw.githubusercontent.com/rust-lang/crates.io-index"
         --index-repository "https://github.com/rust-lang/crates.io-index"
+        --after-publish-delay 64
       )
 
       should_submit_pr=true
@@ -710,10 +710,6 @@ Note: this script should only be run for the latest commit of $this_ref!"
 
   if [ "$spub_verify_from" ]; then
     subpub_args+=(--verify-from "$spub_verify_from")
-  fi
-
-  if [ "$spub_after_publish_delay" ]; then
-    subpub_args+=(--after-publish-delay "$spub_after_publish_delay")
   fi
 
   while IFS= read -r crate; do
