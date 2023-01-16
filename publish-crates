@@ -449,15 +449,15 @@ setup_repository() {
 }
 
 main() {
-  # Script-specific variables
+  # Script-specific definitions
+  local gh_api="https://api.github.com"
+  local cratesio_api="https://crates.io/api"
+
+  # Script-specific inputs
   # shellcheck disable=SC2153 # lowercase counterpart
   local cratesio_target_instance="$CRATESIO_TARGET_INSTANCE"
   # shellcheck disable=SC2153 # lowercase counterpart
   local cratesio_crates_owner="$CRATESIO_CRATES_OWNER"
-  # shellcheck disable=SC2153 # lowercase counterpart
-  local gh_api="$GH_API"
-  # shellcheck disable=SC2153 # lowercase counterpart
-  local cratesio_api="$CRATESIO_API"
   # shellcheck disable=SC2153 # lowercase counterpart
   local repo_owner="$REPO_OWNER"
   # shellcheck disable=SC2153 # lowercase counterpart
