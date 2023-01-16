@@ -455,8 +455,6 @@ main() {
 
   # Script-specific inputs
   # shellcheck disable=SC2153 # lowercase counterpart
-  local cratesio_target_instance="$CRATESIO_TARGET_INSTANCE"
-  # shellcheck disable=SC2153 # lowercase counterpart
   local cratesio_crates_owner="$CRATESIO_CRATES_OWNER"
   # shellcheck disable=SC2153 # lowercase counterpart
   local repo_owner="$REPO_OWNER"
@@ -471,6 +469,7 @@ main() {
   local github_token="${GITHUB_TOKEN:-}"
   local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
   local only_check_pipeline="${ONLY_CHECK_PIPELINE:-}"
+  local cratesio_target_instance="${CRATESIO_TARGET_INSTANCE:-}"
 
   # Variables inherited from GitLab CI
   local this_ref="$CI_COMMIT_REF_NAME"
@@ -554,7 +553,7 @@ Note: this pipeline should only be run for the latest commit of $this_ref!"
       check_commit_msg=true
     ;;
     *)
-      die "Invalid target: $cratesio_target_instance"
+      die "Invalid \$cratesio_target_instance: $cratesio_target_instance"
     ;;
   esac
 
@@ -693,7 +692,7 @@ Note: this pipeline should only be run for the latest commit of $this_ref!"
       use_clean_environment=true
     ;;
     *)
-      die "Invalid target: $cratesio_target_instance"
+      die "Invalid \$cratesio_target_instance: $cratesio_target_instance"
     ;;
   esac
 
