@@ -470,6 +470,7 @@ main() {
   local spub_publish_all="${SPUB_PUBLISH_ALL:-}"
   local github_token="${GITHUB_TOKEN:-}"
   local cratesio_token="${CRATESIO_PUBLISH_TOKEN:-}"
+  local only_check_pipeline="${ONLY_CHECK_PIPELINE:-}"
 
   # Variables inherited from GitLab CI
   local this_ref="$CI_COMMIT_REF_NAME"
@@ -487,6 +488,39 @@ main() {
   local is_tag_ref
   if [ "$ci_commit_tag" ]; then
     is_tag_ref=true
+  fi
+
+  if [ "${only_check_pipeline:-}" ]; then
+    # Use git ls-remote to query what's the latest commit for this ref upstream
+    local remote_head_sha_cmd=(
+      git
+      ls-remote
+      "https://github.com/$repo_owner/$repo"
+      "$this_ref"
+    )
+    local remote_head_sha
+    remote_head_sha="$("${remote_head_sha_cmd[@]}")"
+
+    local expected_remote_head_sha="$initial_commit_sha"$'\t'
+    if [ "${is_tag_ref:-}" ]; then
+      expected_remote_head_sha+="refs/tags/$this_ref"
+    else
+      expected_remote_head_sha+="refs/heads/$this_ref"
+    fi
+
+    if [ "$remote_head_sha" != "$expected_remote_head_sha" ]; then
+      die "
+Unexpected output for command: ${remote_head_sha_cmd[*]}
+
+Expected: $expected_remote_head_sha
+
+Actual: $remote_head_sha
+
+Note: this pipeline should only be run for the latest commit of $this_ref!
+"
+    fi
+
+    exit 0
   fi
 
   git config --global user.name "CI"
@@ -511,7 +545,6 @@ main() {
   local pr_commit_message_start="[CI] adjust workspace versions after publishing"
 
   local check_for_crate_compliance
-  local check_for_latest_commit
   local check_commit_msg
   case "$cratesio_target_instance" in
     local)
@@ -521,7 +554,6 @@ main() {
       # crate compliance is not checked for this target because we assume it has
       # already been checked previously, when this script ran for local target
       check_commit_msg=true
-      check_for_latest_commit=true
     ;;
     *)
       die "Invalid target: $cratesio_target_instance"
@@ -535,35 +567,6 @@ main() {
     if [ "${commit_message:: ${#pr_commit_message_start}}"$'\n' == "$pr_commit_message_start"$'\n' ]; then
       log "Not processing this commit because its commit message starts with: $pr_commit_message_start"
       exit 0
-    fi
-  fi
-
-  if [ "${check_for_latest_commit:-}" ]; then
-    # Use git ls-remote to query what's the latest commit for this ref upstream
-    local remote_head_sha_cmd=(
-      git
-      ls-remote
-      "https://github.com/$repo_owner/$repo"
-      "$this_ref"
-    )
-    local remote_head_sha
-    remote_head_sha="$("${remote_head_sha_cmd[@]}")"
-
-    local expected_remote_head_sha="$initial_commit_sha"$'\t'
-    if [ "${is_tag_ref:-}" ]; then
-      expected_remote_head_sha+="refs/tags/$this_ref"
-    else
-      expected_remote_head_sha+="refs/heads/$this_ref"
-    fi
-
-    if [ "$remote_head_sha" != "$expected_remote_head_sha" ]; then
-      die "Unexpected output for command: ${remote_head_sha_cmd[*]}
-
-Expected: $expected_remote_head_sha
-
-Actual: $remote_head_sha
-
-Note: this script should only be run for the latest commit of $this_ref!"
     fi
   fi
 
