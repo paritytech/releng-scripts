@@ -490,7 +490,7 @@ main() {
     is_tag_ref=true
   fi
 
-  if [ "${only_check_pipeline:-}" ]; then
+  if [ "$only_check_pipeline" ]; then
     # Use git ls-remote to query what's the latest commit for this ref upstream
     local remote_head_sha_cmd=(
       git
@@ -509,15 +509,13 @@ main() {
     fi
 
     if [ "$remote_head_sha" != "$expected_remote_head_sha" ]; then
-      die "
-Unexpected output for command: ${remote_head_sha_cmd[*]}
+      die "Unexpected output for command: ${remote_head_sha_cmd[*]}
 
 Expected: $expected_remote_head_sha
 
 Actual: $remote_head_sha
 
-Note: this pipeline should only be run for the latest commit of $this_ref!
-"
+Note: this pipeline should only be run for the latest commit of $this_ref!"
     fi
 
     exit 0
