@@ -22,7 +22,7 @@ rs *args:
 # Build the Docker image
 build_docker_image owner=default_owner:
   docker build -t $docker_image_name -t {{owner}}/$docker_image_name .
-  docker images | grep "rs"
+  docker images | grep "releng"
 
 run *args:
   docker run --rm -it rs "$@"
