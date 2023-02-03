@@ -152,7 +152,7 @@ export AWS_BUCKET=test
 
 Then start S3Mock:
 
-`./scripts/start-s3-mock.sh`
+`./tasks/start-s3-mock.sh`
 
 Then try to upload a file:
 

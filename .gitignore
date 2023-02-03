@@ -1,3 +1,4 @@
+.env
 /tests/.cleanup-pids
 /tests/.snapshots-overwrite
 /tests/.aws-destinations
