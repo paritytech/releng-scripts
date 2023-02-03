@@ -117,7 +117,7 @@ main() {
     local filename
     filename="$(basename "$location")"
 
-    local remote_destination="$upload_dir/$filename"
+    local remote_destination="${upload_dir:+$upload_dir/}$filename"
 
     if [ ! "${DRY_RUN:-}" ]; then
       log "For input file: $filename"

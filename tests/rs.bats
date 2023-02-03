@@ -192,3 +192,30 @@ teardown() {
   run "$project_root/rs" "${downloader_default_args[@]}"
   assert_snapshot
 }
+
+@test "empty remote destination directory for download" {
+  touch_snapshot
+  run "$project_root/rs" delete \
+    --bucket test \
+    --dry \
+    custom "" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}
+
+@test "empty remote destination directory for upload" {
+  touch_snapshot
+  run "$project_root/rs" upload \
+    --bucket test \
+    --dry \
+    custom "" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}
+
+@test "empty remote destination directory for delete" {
+  touch_snapshot
+  run "$project_root/rs" download \
+    --bucket test \
+    --dry \
+    custom "" s3 "$fixtures_dir/foo.txt"
+  assert_snapshot
+}

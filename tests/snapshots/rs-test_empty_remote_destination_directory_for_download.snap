@@ -1,0 +1,3 @@
+0
+aws s3 rm s3://test/foo.txt
+Deletion exit code: 0
