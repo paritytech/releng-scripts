@@ -196,7 +196,7 @@ teardown() {
 @test "empty remote destination directory for download" {
   touch_snapshot
   run "$project_root/rs" delete \
-    --bucket test \
+    --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
@@ -205,7 +205,7 @@ teardown() {
 @test "empty remote destination directory for upload" {
   touch_snapshot
   run "$project_root/rs" upload \
-    --bucket test \
+    --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
@@ -214,7 +214,7 @@ teardown() {
 @test "empty remote destination directory for delete" {
   touch_snapshot
   run "$project_root/rs" download \
-    --bucket test \
+    --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
