@@ -193,7 +193,7 @@ teardown() {
   assert_snapshot
 }
 
-@test "empty remote destination directory for download" {
+@test "empty remote destination directory for delete" {
   touch_snapshot
   run "$project_root/rs" delete \
     --bucket bucket \
@@ -211,7 +211,7 @@ teardown() {
   assert_snapshot
 }
 
-@test "empty remote destination directory for delete" {
+@test "empty remote destination directory for download" {
   touch_snapshot
   run "$project_root/rs" download \
     --bucket bucket \
