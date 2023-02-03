@@ -73,4 +73,8 @@ main() {
   esac
 }
 
-main "$@"
+if [ "$#" -eq 0 ]; then
+  print_help
+else
+  main "$@"
+fi
