@@ -1,0 +1,3 @@
+0
+aws s3 cp -- s3://bucket/foo.txt .
+Download exit code: 0
