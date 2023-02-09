@@ -32,7 +32,12 @@ system_cargo_config_dir=/.cargo
 on_exit() {
   local exit_code=$?
 
-  rm -rf "$tmp"
+  # it's not necessary to clean up the temporary folder on CI because everything
+  # is cleaned up automatically when the job runner exits
+  if [ ! "${CI:-}" ]; then
+    rm -rf "$tmp"
+  fi
+
   pkill -P "$$" || :
 
   exit "$exit_code"
