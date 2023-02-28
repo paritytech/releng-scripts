@@ -46,6 +46,9 @@ SUBCOMMANDS
   * delete
     Deletes files from some remote storage.
     Use \`$this_filename delete --help\` for usage guidance.
+
+  * version
+    Show the current version
 "
 }
 
@@ -64,7 +67,7 @@ main() {
 
   local subcommand="$1"; shift
   case "$subcommand" in
-    upload|delete|download)
+    upload|delete|download|version)
       "$project_root/cmd/$this_filename/$subcommand.sh" "$@"
     ;;
     *)
