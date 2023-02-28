@@ -1,0 +1,19 @@
+:toc:
+
+== Introduction
+
+This repository contains scripts managed and used by https://github.com/orgs/paritytech/teams/release-engineering[release-engineering].
+
+See the https://github.com/paritytech/releng-scripts/wiki/Tools#TOC[Tools wiki page] for information on the functionality provided through this repository.
+
+include::doc/crate-reservation.adoc[leveloffset=+1]
+
+include::doc/usage.adoc[leveloffset=+1]
+
+include::doc/contributing.adoc[leveloffset=+1]
+
+== License
+
+----
+include::LICENSE[]
+----

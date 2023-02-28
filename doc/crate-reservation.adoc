@@ -1,0 +1,9 @@
+
+= Reserving crates
+
+. Go to https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml
+. Click the "Run workflow" button to access the workflow's form
+. Fill and send the workflow's form. After that a workflow run
+  (https://github.com/paritytech/releng-scripts/actions/runs/3642900863/attempts/1[example])
+  will be created; you might need to refresh the page in order to see it.
+. Wait for the workflow run to finish

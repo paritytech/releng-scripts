@@ -6,16 +6,15 @@ default_owner := "paritytech"
 _default:
   just --choose --chooser "fzf +s -x --tac --cycle"
 
+# Install required tooling
+setup:
+  pip install pre-commit
+
 # Show some help
 help:
   just --list
 
-tests *args:
-  ./tasks/tests.sh "$@"
-
-linters *args:
-  ./tasks/linters.sh "$@"
-
+# Run rs
 rs *args:
   ./rs "$@"
 
@@ -24,6 +23,7 @@ build_docker_image owner=default_owner:
   docker build -t $docker_image_name -t {{owner}}/$docker_image_name .
   docker images | grep "releng"
 
+# Run using docker
 run *args:
   docker run --rm -it rs "$@"
 
@@ -33,3 +33,8 @@ publish_docker_image owner=default_owner: (build_docker_image owner)
 
 # Publish everything
 publish: publish_docker_image
+
+# Generate the readme as Markdown file
+md:
+    #!/usr/bin/env bash
+    asciidoctor -b docbook -a leveloffset=+1 -o - README_src.adoc | pandoc   --markdown-headings=atx --wrap=preserve -t markdown_strict -f docbook - > README.md

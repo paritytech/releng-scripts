@@ -1,0 +1,40 @@
+
+= Usage
+
+== Docker
+
+Once the automation is in place, the image will be available as `paritytech/releng-scripts` and usable as:
+
+```bash
+# Show the help
+docker run --rm -it paritytech/releng-scripts
+# Show the version
+docker run --rm -it paritytech/releng-scripts version
+```
+
+== GitHub Actions
+
+```yaml
+jobs:
+  upload-artifact:
+    name: My workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: First step
+        run: |
+          git clone --depth=1 https://github.com/paritytech/releng-scripts
+          ./releng-scripts/foo ...
+```
+
+== GitLab Jobs
+
+```yaml
+job:
+  script:
+    - git clone --depth=1 https://github.com/paritytech/releng-scripts
+    - ./releng-scripts/foo ...
+```
+
+== Locally
+
+Clone this repository and run the scripts
