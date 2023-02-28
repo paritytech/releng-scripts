@@ -33,6 +33,17 @@ See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tool
 
 # Usage <a name="usage"></a>
 
+## Docker
+
+Once the automation is in place, the image will be available as `paritytech/releng-scripts` and usable as:
+
+```bash
+# Show the help
+docker run --rm -it paritytech/releng-scripts
+# Show the version
+docker run --rm -it paritytech/releng-scripts version
+```
+
 ## GitHub Actions <a name="usage-github-actions"></a>
 
 ```yaml

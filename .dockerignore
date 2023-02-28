@@ -1,1 +1,7 @@
-.env
+.env*
+!.env-sample
+tests
+.github
+.git
+.*
+CODEOWNERS
