@@ -35,7 +35,7 @@ See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tool
 
 ## Docker
 
-Once the automation is in place, the image will be available as `paritytech/releng-scripts` and usable as:
+The image is available as `paritytech/releng-scripts` and usable as:
 
 ```bash
 # Show the help
