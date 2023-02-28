@@ -49,7 +49,7 @@ Delete an artifact.
 
 ## Docker
 
-Once the automation is in place, the image will be available as `paritytech/releng-scripts` and usable as:
+The image is available as `paritytech/releng-scripts` and usable as:
 
     # Show the help
     docker run --rm -it paritytech/releng-scripts
