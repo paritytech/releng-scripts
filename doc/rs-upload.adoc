@@ -2,3 +2,7 @@
 == `rs upload`
 
 Uplooad an artifact.
+
+Check the help with `rs upload --help`
+
+    rs upload --bucket $AWS_BUCKET custom foo/bar s3 tests/fixtures/foo.txt

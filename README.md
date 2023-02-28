@@ -7,9 +7,13 @@ See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tool
 # rs
 
 The commands offerered by `rs` can be access via script, GHS, Docker, etc..
-Those use case are described in the documentation.
+Those use cases are described in the documentation.
 
 The following chapters explain what those commands **are** and how to use them.
+
+You may find convenient testing using:
+
+    alias rs='docker run --rm -it -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_BUCKET paritytech/releng-scripts'
 
 # `rs version`
 
@@ -24,6 +28,10 @@ output:
 # `rs upload`
 
 Uplooad an artifact.
+
+Check the help with `rs upload --help`
+
+    rs upload --bucket $AWS_BUCKET custom foo/bar s3 tests/fixtures/foo.txt
 
 # `rs download`
 

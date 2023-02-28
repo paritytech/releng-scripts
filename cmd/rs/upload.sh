@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# requirements:
+# jq, aws
+
 set -Eeu -o pipefail
 shopt -s inherit_errexit
 
@@ -45,7 +48,7 @@ upload_to_s3() {
     "${backend_upload_args[@]}"
     "${forwarded_backend_args[@]}"
     --
-    "$file"
+    "${file}"
     "$destination"
   )
 
@@ -83,6 +86,7 @@ upload_to_s3() {
       ;;
       *)
         log info "Checking metadata for destination $destination"
+        echo "$response"
         if echo -n "$response" | jq -e; then
           # Valid JSON response for metadata, which means that the file exists
           log error "File already exists: $destination"
@@ -222,7 +226,7 @@ main() {
     local remote_destination="${upload_dir:+$upload_dir/}$filename"
 
     if [ ! "${DRY_RUN:-}" ]; then
-      log "Uploading file: $file"
+      log "Uploading file: $file to bucket $bucket"
       log "Upload destination: $remote_destination"
     fi
 
