@@ -4,6 +4,35 @@ This repository contains scripts managed and used by [release-engineering](https
 
 See the [Tools wiki page](https://github.com/paritytech/releng-scripts/wiki/Tools#TOC) for information on the functionality provided through this repository.
 
+# rs
+
+The commands offerered by `rs` can be access via script, GHS, Docker, etc..
+Those use case are described in the documentation.
+
+The following chapters explain what those commands **are** and how to use them.
+
+# `rs version`
+
+Get the version:
+
+    docker run --rm -it paritytech/releng-scripts version
+
+output:
+
+    0.0.1
+
+# `rs upload`
+
+Uplooad an artifact.
+
+# `rs download`
+
+Download an artifact.
+
+# `rs delete`
+
+Delete an artifact.
+
 # Reserving crates
 
 1.  Go to <https://github.com/paritytech/releng-scripts/actions/workflows/reserve-crate.yml>

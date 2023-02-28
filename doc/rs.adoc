@@ -1,0 +1,14 @@
+== rs
+
+The commands offerered by `rs` can be access via script, GHS, Docker, etc..
+Those use case are described in the documentation.
+
+The following chapters explain what those commands **are** and how to use them.
+
+include::rs-version.adoc[leveloffset=+1]
+
+include::rs-upload.adoc[leveloffset=+1]
+
+include::rs-download.adoc[leveloffset=+1]
+
+include::rs-delete.adoc[leveloffset=+1]
