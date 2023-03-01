@@ -1,4 +1,5 @@
-.env
+.env*
+!.env-sample
 /tests/.cleanup-pids
 /tests/.snapshots-overwrite
 /tests/.aws-destinations
