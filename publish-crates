@@ -278,8 +278,8 @@ setup_diesel() {
 }
 
 setup_postgres() {
-  apt install -qq --assume-yes --no-install-recommends postgresql-11 libpq-dev sudo
-  pg_ctlcluster 11 main start
+  apt install -qq --assume-yes --no-install-recommends postgresql-13 libpq-dev sudo
+  pg_ctlcluster 13 main start
 
   local db_user=pg
   local db_password=pg
