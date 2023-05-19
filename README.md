@@ -89,15 +89,15 @@ Here's an example:
 ```
 /repository
 ├── cmd
-│  └── rs
+│  └── releng-scripts
 │     └── upload.sh
-└── rs
+└── releng-scripts
 ```
 
-`rs` is a tool entrypoint meant for external consumption, therefore it doesn't
+`releng-scripts` is a tool entrypoint meant for external consumption, therefore it doesn't
 include an extension. On the other hand, `upload.sh`, which corresponds to the
-`upload` subcommand of `rs`, can keep its extension because it's not meant for
-external consumption, as it's invoked by `rs`.
+`upload` subcommand of `releng-scripts`, can keep its extension because it's not meant for
+external consumption, as it's invoked by `releng-scripts`.
 
 ### Tools <a name="development-repository-structure-tools"></a>
 
@@ -121,13 +121,13 @@ Here's an example:
 ```
 /repository
 ├── cmd
-│  └── rs
+│  └── releng-scripts
 │     └── upload.sh
-└── rs
+└── releng-scripts
 ```
 
-`rs` is the tool's entrypoint and `upload.sh` corresponds to the `upload`
-subcommand of `rs`.
+`releng-scripts` is the tool's entrypoint and `upload.sh` corresponds to the `upload`
+subcommand of `releng-scripts`.
 
 ### Maintenance <a name="development-repository-structure-maintenance"></a>
 
@@ -167,4 +167,4 @@ Then start S3Mock:
 
 Then try to upload a file:
 
-`just rs upload custom foo/bar s3 --s3mock tests/fixtures/foo.txt`
+`just releng-scripts upload custom foo/bar s3 --s3mock tests/fixtures/foo.txt`

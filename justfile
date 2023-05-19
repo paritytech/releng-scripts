@@ -16,12 +16,12 @@ tests *args:
 linters *args:
   ./tasks/linters.sh "$@"
 
-rs *args:
-  ./rs "$@"
+releng-scripts *args:
+  ./releng-scripts "$@"
 
 
 run *args:
-  docker run --rm -it rs "$@"
+  docker run --rm -it releng-scripts "$@"
 
 # Generate the readme as .md
 md:

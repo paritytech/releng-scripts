@@ -143,7 +143,7 @@ LOCATION...
 # Script entrypoint
 
 main() {
-  # shellcheck disable=SC2034 # FALLBACK_TO_HELP is used in ../rs
+  # shellcheck disable=SC2034 # FALLBACK_TO_HELP is used in ../releng-scripts
   FALLBACK_TO_HELP="$run --help"
 
   get_opt consume-optional-bool help "$@"

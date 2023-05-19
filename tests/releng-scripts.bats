@@ -62,31 +62,31 @@ teardown() {
 
 @test "help can be printed" {
   touch_snapshot
-  run "$project_root/rs" --help
+  run "$project_root/releng-scripts" --help
   assert_snapshot status
 }
 
 @test "upload help can be printed" {
   touch_snapshot
-  run "$project_root/rs" upload --help
+  run "$project_root/releng-scripts" upload --help
   assert_snapshot status
 }
 
 @test "delete help can be printed" {
   touch_snapshot
-  run "$project_root/rs" delete --help
+  run "$project_root/releng-scripts" delete --help
   assert_snapshot status
 }
 
 @test "download help can be printed" {
   touch_snapshot
-  run "$project_root/rs" download --help
+  run "$project_root/releng-scripts" download --help
   assert_snapshot status
 }
 
 @test "backend options are properly forwarded for upload" {
   touch_snapshot
-  run "$project_root/rs" "${uploader_dry_args[@]}" \
+  run "$project_root/releng-scripts" "${uploader_dry_args[@]}" \
     s3 - --foo --bar -- \
     PLACEHOLDER
   assert_snapshot
@@ -94,7 +94,7 @@ teardown() {
 
 @test "backend options are properly forwarded for delete" {
   touch_snapshot
-  run "$project_root/rs" "${deleter_dry_args[@]}" \
+  run "$project_root/releng-scripts" "${deleter_dry_args[@]}" \
     s3 - --foo --bar -- \
     PLACEHOLDER
   assert_snapshot
@@ -104,15 +104,15 @@ teardown() {
   touch_snapshot
 
   test_output append "=== UPLOAD THE FILE ==="
-  run "$project_root/rs" "${uploader_default_args[@]}"
+  run "$project_root/releng-scripts" "${uploader_default_args[@]}"
   test_output append "$output"
 
   test_output append "=== UPLOAD FAILS BECAUSE OVERWRITE IS DISABLED ==="
-  run "$project_root/rs" "${uploader_default_args[@]}"
+  run "$project_root/releng-scripts" "${uploader_default_args[@]}"
   test_output append "$output"
 
   test_output append "=== UPLOAD WORKS BECAUSE OF --overwrite ==="
-  run "$project_root/rs" "${uploader_overwrite_args[@]}"
+  run "$project_root/releng-scripts" "${uploader_overwrite_args[@]}"
   test_output append "$output"
 
   test_output collect
@@ -124,7 +124,7 @@ teardown() {
   GITHUB_REPOSITORY_OWNER=polkadot \
   GITHUB_WORKFLOW=foo \
   GITHUB_RUN_ID=123 \
-    run "$project_root/rs" "${uploader_base_args[@]}" --dry \
+    run "$project_root/releng-scripts" "${uploader_base_args[@]}" --dry \
       gha \
       s3 PLACEHOLDER
   assert_snapshot
@@ -132,7 +132,7 @@ teardown() {
 
 @test "release operation works" {
   touch_snapshot
-  run "$project_root/rs" "${uploader_base_args[@]}" --dry \
+  run "$project_root/releng-scripts" "${uploader_base_args[@]}" --dry \
     release polkadot v0.9.30 \
     s3 PLACEHOLDER
   assert_snapshot
@@ -140,7 +140,7 @@ teardown() {
 
 @test "custom operation works" {
   touch_snapshot
-  run "$project_root/rs" "${uploader_dry_args[@]}" \
+  run "$project_root/releng-scripts" "${uploader_dry_args[@]}" \
     s3 PLACEHOLDER
   assert_snapshot
 }
@@ -156,7 +156,7 @@ teardown() {
     "${uploader_default_args[@]:: $(( ${#uploader_default_args[*]} - 1 ))}"
     http://0.0.0.0:8000/foo.txt
   )
-  run "$project_root/rs" "${upload_args[@]}"
+  run "$project_root/releng-scripts" "${upload_args[@]}"
 
   fixtures_server kill
 
@@ -165,37 +165,37 @@ teardown() {
 
 @test "files can be deleted" {
   touch_snapshot
-  run "$project_root/rs" "${deleter_default_args[@]}"
+  run "$project_root/releng-scripts" "${deleter_default_args[@]}"
   assert_snapshot
 }
 
 @test "uploading with --dry works" {
   touch_snapshot
-  run "$project_root/rs" "${uploader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  run "$project_root/releng-scripts" "${uploader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
 }
 
 @test "deleting with --dry works" {
   touch_snapshot
-  run "$project_root/rs" "${deleter_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  run "$project_root/releng-scripts" "${deleter_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
 }
 
 @test "downloading with --dry works" {
   touch_snapshot
-  run "$project_root/rs" "${downloader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
+  run "$project_root/releng-scripts" "${downloader_dry_args[@]}" s3 "$fixtures_dir/foo.txt"
   assert_snapshot
 }
 
 @test "files can be downloaded" {
   touch_snapshot
-  run "$project_root/rs" "${downloader_default_args[@]}"
+  run "$project_root/releng-scripts" "${downloader_default_args[@]}"
   assert_snapshot
 }
 
 @test "empty remote destination directory for delete" {
   touch_snapshot
-  run "$project_root/rs" delete \
+  run "$project_root/releng-scripts" delete \
     --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
@@ -204,7 +204,7 @@ teardown() {
 
 @test "empty remote destination directory for upload" {
   touch_snapshot
-  run "$project_root/rs" upload \
+  run "$project_root/releng-scripts" upload \
     --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
@@ -213,7 +213,7 @@ teardown() {
 
 @test "empty remote destination directory for download" {
   touch_snapshot
-  run "$project_root/rs" download \
+  run "$project_root/releng-scripts" download \
     --bucket bucket \
     --dry \
     custom "" s3 "$fixtures_dir/foo.txt"
