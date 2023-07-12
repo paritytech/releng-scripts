@@ -46,7 +46,7 @@ jobs:
           cache-on-failure: "true"
 
       - name: Install cargo-generate
-        run: cargo install cargo-generate --version 0.18.1
+        run: cargo install cargo-generate --version 0.18.1 --locked
 
       - name: Reserve the crate
         env:
