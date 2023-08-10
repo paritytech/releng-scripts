@@ -1,0 +1,10 @@
+
+== `rs version`
+
+Get the version:
+
+    docker run --rm -it paritytech/releng-scripts version
+
+output:
+
+    0.0.1

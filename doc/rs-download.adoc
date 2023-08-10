@@ -1,0 +1,4 @@
+
+== `rs download`
+
+Download an artifact.

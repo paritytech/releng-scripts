@@ -1,0 +1,91 @@
+= Contributing
+
+== Repository structure
+
+=== External consumption
+
+If a script is meant for external consumption, such as the tools' entrypoints,
+then avoid adding file extensions to them since that's more subject to breaking
+changes in case we want to change the script's programming language later.
+Adding the extension is encouraged for files which are not meant for external
+consumption, i.e. scripts which are used only internally or are run through some
+command runner such as `just`.
+
+Here's an example:
+
+  /repository
+  ├── cmd
+  │  └── rs
+  │     └── upload.sh
+  └── rs
+
+`rs` is a tool entrypoint meant for external consumption, therefore it doesn't
+include an extension. On the other hand, `upload.sh`, which corresponds to the
+`upload` subcommand of `rs`, can keep its extension because it's not meant for
+external consumption, as it's invoked by `rs`.
+
+=== Tools
+
+Tools are organized with the following hierarchy:
+
+- Their entrypoints are located at the root of the repository for
+  ease-of-external-consumption's sake.
+
+  Avoid including the extension to those files because that's more subject to
+  breaking changes in case we want to change the tool's programming language
+  later.
+
+  Please maintain an entry to the tools in `./justfile` for ease-of-use's sake.
+
+- In case the tool has subcommands, they are located at `./cmd/$TOOL/$SUBCOMMAND`
+
+  This is to avoid noisy handling of too many commands within a single file.
+
+Here's an example:
+
+  /repository
+  ├── cmd
+  │  └── rs
+  │     └── upload.sh
+  └── rs
+
+`rs` is the tool's entrypoint and `upload.sh` corresponds to the `upload`
+subcommand of `rs`.
+
+=== Maintenance
+
+The `./tasks` directory groups scripts for tasks related to project maintenance,
+such as running linters and tests.
+
+Please maintain an entry to those scripts in `./justfile` for ease-of-use's sake.
+
+== Tests
+
+Run the test: `just tests`
+
+Update the snapshots: `just tests --update`
+
+Delete stale snapshots: `just tests --delete-stale-snapshots`
+
+== Linters
+
+`just linters`
+
+== S3
+
+For testing out the S3 backend you can use https://github.com/adobe/S3Mock[S3Mock].
+
+Set up the following environment variables:
+
+  export AWS_ACCESS_KEY_ID=1234567890
+  export AWS_SECRET_ACCESS_KEY=valid-test-key-ref
+  export AWS_DEFAULT_REGION=us-east-1
+  export AWS_BUCKET=test
+
+Then start S3Mock:
+
+`./tasks/start-s3-mock.sh`
+
+Then try to upload a file:
+
+`just rs upload custom foo/bar s3 --s3mock tests/fixtures/foo.txt`
