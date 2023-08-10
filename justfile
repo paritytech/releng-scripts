@@ -14,14 +14,18 @@ setup:
 help:
   just --list
 
-# Run rs
-rs *args:
-  ./rs "$@"
+tests *args:
+  ./tasks/tests.sh "$@"
 
+linters *args:
+  ./tasks/linters.sh "$@"
+
+releng-scripts *args:
+  ./releng-scripts "$@"
 
 # Run using docker
 run *args:
-  docker run --rm -it rs "$@"
+  docker run --rm -it releng-scripts "$@"
 
 # Push the docker image
 publish_docker_image owner=default_owner: (build_docker_image owner)
