@@ -1,5 +1,6 @@
 set positional-arguments
 export docker_image_name := "releng-scripts"
+export ENGINE := "podman"
 default_owner := "paritytech"
 
 # List available commands
@@ -23,19 +24,23 @@ linters *args:
 releng-scripts *args:
   ./releng-scripts "$@"
 
-# Run using docker
+# Run as container
 run *args:
-  docker run --rm -it releng-scripts "$@"
+  $ENGINE run --rm -it releng-scripts "$@"
+
+# Build the docker image
+build_docker_image owner=default_owner:
+  $ENGINE build -t {{owner}}/$docker_image_name .
+  $ENGINE images | grep {{owner}}/$docker_image_name
 
 # Push the docker image
 publish_docker_image owner=default_owner: (build_docker_image owner)
-  docker push {{owner}}/$docker_image_name
+  $ENGINE push {{owner}}/$docker_image_name
 
 # Publish everything
 publish: publish_docker_image
 
 # Generate the readme as Markdown file
-
 md:
     #!/usr/bin/env bash
     asciidoctor -b docbook -a leveloffset=+1 -o - README_src.adoc | pandoc   --markdown-headings=atx --wrap=preserve -t markdown_strict -f docbook - > README.md
